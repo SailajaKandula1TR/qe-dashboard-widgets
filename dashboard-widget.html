@@ -512,78 +512,326 @@
         }
 
         async function fetchDashboardData() {
-            const endpoints = ['/api/metrics', '/api/data', '/metrics', '/data'];
+            // Your specific API endpoints
+            const endpoints = [
+                // Production Issues endpoints
+                '/api/workitems/production-bugs/public/stats',
+                '/api/workitems/production-bugs/public/by-fix-version',
+                '/api/workitems/production-bugs/public/by-component',
+                
+                // Test Automation endpoints
+                '/api/test/public/automation-summary',
+                '/api/test/public/stats',
+                '/api/test/public/monthly-automation-status'
+            ];
             
-            // Try API endpoints first
+            const fetchedData = {};
+            let successfulFetches = 0;
+            
+            // Fetch data from all endpoints
             for (const endpoint of endpoints) {
                 try {
+                    console.log(`Trying endpoint: ${CONFIG.dashboardUrl}${endpoint}`);
                     const response = await fetch(`${CONFIG.dashboardUrl}${endpoint}`, {
                         mode: 'cors',
-                        timeout: CONFIG.timeout
+                        timeout: CONFIG.timeout,
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
                     });
                     
                     if (response.ok) {
                         const data = await response.json();
-                        console.log(`Data fetched from ${endpoint}`);
-                        return { api: data, source: endpoint };
+                        const endpointKey = endpoint.split('/').pop(); // Get last part as key
+                        fetchedData[endpointKey] = data;
+                        successfulFetches++;
+                        console.log(`✅ Success: ${endpoint}`, data);
+                    } else {
+                        console.warn(`❌ Failed: ${endpoint} - Status: ${response.status}`);
                     }
                 } catch (e) {
+                    console.warn(`❌ Error: ${endpoint}`, e.message);
                     continue;
                 }
             }
 
-            // Try HTML scraping
+            if (successfulFetches > 0) {
+                console.log(`🎯 Successfully fetched data from ${successfulFetches} endpoints`);
+                return { api: fetchedData, source: `api-${successfulFetches}-endpoints` };
+            }
+
+            // Fallback: Try main dashboard HTML scraping
             try {
                 const response = await fetch(CONFIG.dashboardUrl, { mode: 'cors' });
                 if (response.ok) {
                     const html = await response.text();
-                    const scrapedData = parseHTMLMetrics(html);
+                    console.log('📄 Fetched main dashboard HTML as fallback');
+                    const scrapedData = parseTabBasedMetrics(html);
                     if (Object.keys(scrapedData).length > 0) {
-                        return { scraped: scrapedData, source: 'html' };
+                        return { scraped: scrapedData, source: 'html-fallback' };
                     }
                 }
             } catch (e) {
                 console.warn('HTML scraping failed:', e);
             }
 
-            throw new Error('Cannot access dashboard. CORS might be blocking requests.');
+            throw new Error('Cannot access any dashboard endpoints. Please check CORS configuration.');
         }
 
-        function parseHTMLMetrics(html) {
+        function parseTabBasedMetrics(html) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
             const metrics = {};
-            // Extract numbers from HTML - customize based on your dashboard
-            const numbers = html.match(/\d+(?:\.\d+)?/g) || [];
             
-            if (numbers.length >= 4) {
-                metrics.totalTests = parseInt(numbers[0]) || 0;
-                metrics.openIssues = parseInt(numbers[1]) || 0;
-                metrics.coverage = parseFloat(numbers[2]) || 0;
-                metrics.passRate = parseFloat(numbers[3]) || 0;
+            console.log('Parsing dashboard tabs...');
+            
+            // Parse Production Issues tab
+            const productionSection = findSectionByKeywords(doc, ['production', 'issues', 'bugs', 'incidents']);
+            if (productionSection) {
+                metrics.openIssues = extractNumberFromSection(productionSection, ['open', 'critical', 'high', 'total']) || 0;
+                console.log('Found production issues:', metrics.openIssues);
+            }
+            
+            // Parse Automation tab
+            const automationSection = findSectionByKeywords(doc, ['automation', 'test', 'suite']);
+            if (automationSection) {
+                metrics.totalTests = extractNumberFromSection(automationSection, ['total', 'count', 'tests']) || 0;
+                metrics.coverage = extractPercentageFromSection(automationSection, ['coverage', 'percent', '%']) || 0;
+                metrics.passRate = extractPercentageFromSection(automationSection, ['pass', 'success', 'rate']) || 0;
+                console.log('Found automation metrics:', { totalTests: metrics.totalTests, coverage: metrics.coverage, passRate: metrics.passRate });
+            }
+            
+            // Parse Performance tab
+            const performanceSection = findSectionByKeywords(doc, ['performance', 'execution', 'time']);
+            if (performanceSection) {
+                metrics.avgExecutionTime = extractNumberFromSection(performanceSection, ['time', 'duration', 'execution', 'avg']) || 0;
+                console.log('Found performance metrics:', metrics.avgExecutionTime);
+            }
+            
+            // Fallback: extract numbers from entire document
+            if (Object.keys(metrics).length === 0) {
+                console.log('No tab-specific data found, using fallback extraction...');
+                const allNumbers = html.match(/\d+(?:\.\d+)?/g) || [];
+                const allPercentages = html.match(/\d+(?:\.\d+)?\s*%/g) || [];
+                
+                if (allNumbers.length >= 3) {
+                    metrics.openIssues = parseInt(allNumbers[0]) || 0;
+                    metrics.totalTests = parseInt(allNumbers[1]) || 0;
+                    metrics.avgExecutionTime = parseInt(allNumbers[2]) || 0;
+                }
+                
+                if (allPercentages.length >= 2) {
+                    metrics.coverage = parseFloat(allPercentages[0]) || 0;
+                    metrics.passRate = parseFloat(allPercentages[1]) || 0;
+                }
             }
             
             return metrics;
         }
+        
+        function findSectionByKeywords(doc, keywords) {
+            for (const keyword of keywords) {
+                // Look for elements containing the keyword
+                const elements = doc.querySelectorAll(`*:contains("${keyword}"), [class*="${keyword}"], [id*="${keyword}"]`);
+                for (const element of elements) {
+                    if (element.textContent && element.textContent.toLowerCase().includes(keyword)) {
+                        return element.closest('div, section, article, .tab-content, .panel') || element;
+                    }
+                }
+                
+                // Also check for tab elements
+                const tabSelectors = [
+                    `[data-tab*="${keyword}"]`,
+                    `[aria-label*="${keyword}"]`,
+                    `.${keyword}-tab`, `#${keyword}-tab`,
+                    `.tab-${keyword}`, `#tab-${keyword}`
+                ];
+                
+                for (const selector of tabSelectors) {
+                    try {
+                        const element = doc.querySelector(selector);
+                        if (element) return element;
+                    } catch (e) {}
+                }
+            }
+            return null;
+        }
+        
+        function extractNumberFromSection(section, keywords) {
+            if (!section) return 0;
+            
+            for (const keyword of keywords) {
+                const regex = new RegExp(`${keyword}[^\d]*([\d,]+)`, 'i');
+                const match = section.textContent.match(regex);
+                if (match) {
+                    return parseInt(match[1].replace(/,/g, ''));
+                }
+            }
+            
+            // Fallback: find any number in the section
+            const numbers = section.textContent.match(/\d+/g);
+            return numbers ? parseInt(numbers[0]) : 0;
+        }
+        
+        function extractPercentageFromSection(section, keywords) {
+            if (!section) return 0;
+            
+            for (const keyword of keywords) {
+                const regex = new RegExp(`${keyword}[^\d]*([\d.]+)\s*%?`, 'i');
+                const match = section.textContent.match(regex);
+                if (match) {
+                    return parseFloat(match[1]);
+                }
+            }
+            
+            // Fallback: find any percentage in the section
+            const percentages = section.textContent.match(/([\d.]+)\s*%/g);
+            return percentages ? parseFloat(percentages[0]) : 0;
+        }
 
         function processMetrics(rawData) {
             const data = rawData.api || rawData.scraped || {};
+            const metrics = {};
             
-            return {
-                totalTests: extractValue(data, ['totalTests', 'total_tests', 'testCount']) || 856,
-                openIssues: extractValue(data, ['openIssues', 'open_issues', 'issueCount']) || 12,
-                coverage: extractValue(data, ['coverage', 'testCoverage', 'codeCoverage']) || 87.5,
-                passRate: extractValue(data, ['passRate', 'pass_rate', 'successRate']) || 94.2,
-                testsPassed: extractValue(data, ['testsPassed', 'tests_passed']),
-                testsFailed: extractValue(data, ['testsFailed', 'tests_failed']),
-                avgExecutionTime: extractValue(data, ['avgExecutionTime', 'avg_execution_time']) || 42,
-                defectDensity: extractValue(data, ['defectDensity', 'defect_density']) || 1.8,
-                source: rawData.source || 'mock'
+            console.log('🔍 Processing metrics from data:', data);
+            
+            // Process Production Issues data
+            if (data.stats) {
+                // From /api/workitems/production-bugs/public/stats
+                metrics.openIssues = extractNestedValue(data.stats, [
+                    'total', 'count', 'open', 'activeCount', 'totalIssues'
+                ]) || 0;
+                console.log('📊 Production issues from stats:', metrics.openIssues);
+            }
+            
+            if (data['by-fix-version'] || data['by-component']) {
+                // Additional production data processing
+                const fixVersionData = data['by-fix-version'];
+                const componentData = data['by-component'];
+                
+                if (fixVersionData && Array.isArray(fixVersionData)) {
+                    const totalFromVersions = fixVersionData.reduce((sum, item) => {
+                        return sum + (item.count || item.total || item.issues || 0);
+                    }, 0);
+                    if (totalFromVersions > 0) metrics.openIssues = totalFromVersions;
+                }
+            }
+            
+            // Process Test Automation data
+            if (data['automation-summary']) {
+                // From /api/test/public/automation-summary
+                const automationData = data['automation-summary'];
+                metrics.totalTests = extractNestedValue(automationData, [
+                    'totalTests', 'total', 'count', 'testCount'
+                ]) || 0;
+                metrics.coverage = extractNestedValue(automationData, [
+                    'coverage', 'coveragePercent', 'testCoverage', 'percentage'
+                ]) || 0;
+                metrics.passRate = extractNestedValue(automationData, [
+                    'passRate', 'successRate', 'pass_rate', 'passed_percentage'
+                ]) || 0;
+                console.log('🧪 Automation summary:', { totalTests: metrics.totalTests, coverage: metrics.coverage, passRate: metrics.passRate });
+            }
+            
+            if (data.stats && data.stats !== data.stats) { // Different stats endpoint
+                // From /api/test/public/stats
+                const testStats = data.stats;
+                if (!metrics.totalTests) {
+                    metrics.totalTests = extractNestedValue(testStats, [
+                        'totalTests', 'total', 'count'
+                    ]) || 0;
+                }
+                if (!metrics.testsPassed) {
+                    metrics.testsPassed = extractNestedValue(testStats, [
+                        'passed', 'passedTests', 'success'
+                    ]) || 0;
+                }
+                if (!metrics.testsFailed) {
+                    metrics.testsFailed = extractNestedValue(testStats, [
+                        'failed', 'failedTests', 'failure'
+                    ]) || 0;
+                }
+            }
+            
+            if (data['monthly-automation-status']) {
+                // From /api/test/public/monthly-automation-status
+                const monthlyData = data['monthly-automation-status'];
+                if (Array.isArray(monthlyData) && monthlyData.length > 0) {
+                    const latestMonth = monthlyData[monthlyData.length - 1];
+                    metrics.avgExecutionTime = extractNestedValue(latestMonth, [
+                        'avgExecutionTime', 'averageTime', 'executionTime', 'duration'
+                    ]) || 0;
+                }
+            }
+            
+            // Set defaults if no data found
+            const finalMetrics = {
+                totalTests: metrics.totalTests || 856,
+                openIssues: metrics.openIssues || 12,
+                coverage: metrics.coverage || 87.5,
+                passRate: metrics.passRate || 94.2,
+                testsPassed: metrics.testsPassed,
+                testsFailed: metrics.testsFailed,
+                avgExecutionTime: metrics.avgExecutionTime || 42,
+                defectDensity: metrics.defectDensity || 1.8,
+                source: rawData.source || 'mock',
+                lastFetch: new Date().toISOString()
             };
+            
+            console.log('✅ Final processed metrics:', finalMetrics);
+            return finalMetrics;
+        }
+        
+        function extractNestedValue(obj, paths) {
+            if (!obj) return null;
+            
+            for (const path of paths) {
+                let value;
+                
+                // Handle dot notation (e.g., 'data.total')
+                if (path.includes('.')) {
+                    const pathParts = path.split('.');
+                    value = pathParts.reduce((current, key) => current && current[key], obj);
+                } else {
+                    value = obj[path];
+                }
+                
+                if (value !== undefined && value !== null) {
+                    const numValue = typeof value === 'number' ? value : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                        return numValue;
+                    }
+                    // Also try to extract number from string
+                    if (typeof value === 'string') {
+                        const match = value.match(/([\d.]+)/);
+                        if (match) {
+                            const parsed = parseFloat(match[1]);
+                            if (!isNaN(parsed)) return parsed;
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         function extractValue(data, paths) {
             for (const path of paths) {
-                if (data[path] !== undefined) {
-                    return typeof data[path] === 'number' ? data[path] : parseFloat(data[path]) || 0;
+                let value;
+                
+                // Handle nested paths (e.g., 'automation.totalTests')
+                if (path.includes('.')) {
+                    const pathParts = path.split('.');
+                    value = pathParts.reduce((obj, key) => obj && obj[key], data);
+                } else {
+                    value = data[path];
+                }
+                
+                if (value !== undefined && value !== null) {
+                    const numValue = typeof value === 'number' ? value : parseFloat(value);
+                    if (!isNaN(numValue)) {
+                        return numValue;
+                    }
                 }
             }
             return 0;
@@ -680,6 +928,20 @@
                     📡 Last updated: ${lastUpdateTime?.toLocaleString() || 'Never'} | 
                     🔄 Auto-refresh: Every 5 minutes | 
                     🌐 Source: ${metrics.source}
+                    ${metrics.lastFetch ? ` | 🕒 Fetched: ${new Date(metrics.lastFetch).toLocaleTimeString()}` : ''}
+                    
+                    <details style="margin-top: 10px; font-size: 11px; opacity: 0.8;">
+                        <summary style="cursor: pointer;">🔍 Data Sources Debug</summary>
+                        <div style="margin-top: 5px; padding: 8px; background: white; border-radius: 4px; text-align: left;">
+                            <strong>API Endpoints Status:</strong><br>
+                            • Production Issues: /api/workitems/production-bugs/public/stats<br>
+                            • Automation Summary: /api/test/public/automation-summary<br>
+                            • Test Stats: /api/test/public/stats<br>
+                            • Monthly Status: /api/test/public/monthly-automation-status<br>
+                            <br>
+                            <strong>Check browser console (F12) for detailed logs</strong>
+                        </div>
+                    </details>
                 </div>
             `;
 
