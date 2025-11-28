@@ -502,10 +502,14 @@
             updateConnectionStatus(false, 'Connecting...');
             
             try {
+                // Add detailed debugging
+                console.log('🚀 Starting dashboard initialization...');
+                console.log('🌐 Dashboard URL:', CONFIG.dashboardUrl);
+                
                 await loadDashboardData();
                 addChatMessage('system', '✅ Dashboard connected! You can now ask questions about your QE metrics.');
             } catch (error) {
-                console.error('Failed to initialize:', error);
+                console.error('❌ Failed to initialize:', error);
                 showDashboardError(error.message);
                 addChatMessage('system', '⚠️ Dashboard connection failed. I can still answer general questions!');
             }
@@ -543,10 +547,24 @@
                     
                     if (response.ok) {
                         const data = await response.json();
-                        const endpointKey = endpoint.split('/').pop(); // Get last part as key
+                        // Create a more specific key that identifies the endpoint uniquely
+                        let endpointKey;
+                        if (endpoint.includes('production-bugs')) {
+                            if (endpoint.includes('stats')) endpointKey = 'production-stats';
+                            else if (endpoint.includes('by-fix-version')) endpointKey = 'production-by-fix-version';
+                            else if (endpoint.includes('by-component')) endpointKey = 'production-by-component';
+                        } else if (endpoint.includes('test')) {
+                            if (endpoint.includes('automation-summary')) endpointKey = 'automation-summary';
+                            else if (endpoint.includes('stats')) endpointKey = 'test-stats';
+                            else if (endpoint.includes('monthly-automation')) endpointKey = 'monthly-automation-status';
+                        } else {
+                            endpointKey = endpoint.split('/').pop(); // fallback
+                        }
+                        
                         fetchedData[endpointKey] = data;
                         successfulFetches++;
-                        console.log(`✅ Success: ${endpoint}`, data);
+                        console.log(`✅ Success: ${endpoint} → ${endpointKey}`);
+                        console.log(`📊 Data structure:`, JSON.stringify(data, null, 2));
                     } else {
                         console.warn(`❌ Failed: ${endpoint} - Status: ${response.status}`);
                     }
@@ -694,33 +712,195 @@
             const data = rawData.api || rawData.scraped || {};
             const metrics = {};
             
-            console.log('🔍 Processing metrics from data:', data);
+            console.log('🔍 RAW DATA RECEIVED:', JSON.stringify(data, null, 2));
+            console.log('🗝️  Available data keys:', Object.keys(data));
             
-            // Process Production Issues data
-            if (data.stats) {
-                // From /api/workitems/production-bugs/public/stats
-                metrics.openIssues = extractNestedValue(data.stats, [
-                    'total', 'count', 'open', 'activeCount', 'totalIssues'
-                ]) || 0;
-                console.log('📊 Production issues from stats:', metrics.openIssues);
+            // DIRECT ACCESS TEST - try the exact keys we expect
+            console.log('\n🎯 DIRECT ACCESS TESTS:');
+            console.log('data["production-stats"]:', data["production-stats"]);
+            console.log('data.stats:', data.stats);
+            console.log('data["stats"]:', data["stats"]);
+            console.log('data.productionStats:', data.productionStats);
+            
+            // NEW: Check for nested data structure like {success: true, data: {byState: [...]}}
+            Object.keys(data).forEach(key => {
+                const value = data[key];
+                if (value && typeof value === 'object' && value.data && value.data.byState) {
+                    console.log(`🎯 FOUND NESTED byState in ${key}.data.byState:`, value.data.byState);
+                    const byStateArray = value.data.byState;
+                    
+                    let openCount = 0, totalCount = 0;
+                    byStateArray.forEach((item, i) => {
+                        const state = item.state || '';
+                        const count = parseInt(item.count || 0);
+                        console.log(`  [${i}] ${state}: ${count}`);
+                        totalCount += count;
+                        
+                        // Count everything except closed states as open
+                        if (!['closed', 'resolved', 'removed'].some(cs => state.toLowerCase().includes(cs))) {
+                            openCount += count;
+                            console.log(`    ↳ OPEN: +${count}`);
+                        } else {
+                            console.log(`    ↳ CLOSED: ${state}`);
+                        }
+                    });
+                    
+                    console.log(`🎯 NESTED CALCULATION: ${openCount} open, ${totalCount} total`);
+                    metrics.openIssues = openCount;
+                    metrics.totalIssues = totalCount;
+                }
+            });
+            
+            // If we have production-stats, force process it regardless of structure
+            if (data["production-stats"]) {
+                console.log('🚀 FOUND production-stats, forcing processing...');
+                const prodStats = data["production-stats"];
+                console.log('🚀 Production stats type:', typeof prodStats);
+                console.log('🚀 Production stats array?:', Array.isArray(prodStats));
+                console.log('🚀 Production stats content:', prodStats);
+                
+                if (Array.isArray(prodStats)) {
+                    console.log('🚀 Processing as array...');
+                    let openCount = 0, totalCount = 0;
+                    prodStats.forEach((item, i) => {
+                        const state = item.state || item.State || '';
+                        const count = parseInt(item.count || item.Count || 0);
+                        console.log(`  [${i}] ${state}: ${count}`);
+                        totalCount += count;
+                        if (!['closed', 'resolved', 'removed'].some(cs => state.toLowerCase().includes(cs))) {
+                            openCount += count;
+                        }
+                    });
+                    console.log(`🎯 DIRECT CALCULATION: ${openCount} open, ${totalCount} total`);
+                    metrics.openIssues = openCount;
+                    metrics.totalIssues = totalCount;
+                }
             }
             
-            if (data['by-fix-version'] || data['by-component']) {
-                // Additional production data processing
-                const fixVersionData = data['by-fix-version'];
-                const componentData = data['by-component'];
+            // BRUTE FORCE TEST: Try every single key and log what we find
+            console.log('🔨 BRUTE FORCE: Testing every single key...');
+            Object.keys(data).forEach(key => {
+                const value = data[key];
+                console.log(`\n🔨 KEY: "${key}"`);
+                console.log(`   Type: ${typeof value}`);
+                console.log(`   IsArray: ${Array.isArray(value)}`);
+                console.log(`   Value:`, value);
                 
-                if (fixVersionData && Array.isArray(fixVersionData)) {
+                // Since arrays are false, let's check objects too
+                if (value && typeof value === 'object' && !Array.isArray(value)) {
+                    console.log(`   Object keys:`, Object.keys(value));
+                    console.log(`   Object values sample:`, Object.values(value).slice(0, 3));
+                    
+                    // Check if this object has properties that look like stats
+                    const objKeys = Object.keys(value);
+                    if (objKeys.some(k => k.toLowerCase().includes('state') || k.toLowerCase().includes('count'))) {
+                        console.log(`   🎯 OBJECT MIGHT CONTAIN STATS DATA`);
+                    }
+                    
+                    // Check if this object has nested arrays
+                    objKeys.forEach(objKey => {
+                        if (Array.isArray(value[objKey])) {
+                            console.log(`   📋 Found array in ${key}.${objKey}:`, value[objKey].length, 'items');
+                            if (value[objKey].length > 0) {
+                                console.log(`      First item:`, value[objKey][0]);
+                                
+                                // Try to process this nested array
+                                const nestedArray = value[objKey];
+                                let testOpen = 0;
+                                let testTotal = 0;
+                                
+                                nestedArray.forEach(item => {
+                                    if (item && typeof item === 'object') {
+                                        const state = item.state || item.State || '';
+                                        const count = parseInt(item.count || item.Count || 0);
+                                        if (state && count > 0) {
+                                            testTotal += count;
+                                            const stateLower = state.toLowerCase();
+                                            if (!['closed', 'resolved', 'removed', 'done', 'completed'].some(cs => stateLower.includes(cs))) {
+                                                testOpen += count;
+                                            }
+                                        }
+                                    }
+                                });
+                                
+                                if (testTotal > 0) {
+                                    console.log(`      🎯 CALCULATED FROM ${key}.${objKey}: ${testOpen} open out of ${testTotal} total`);
+                                    if (testTotal > 100) {
+                                        console.log(`      ✅ USING NESTED DATA FROM: ${key}.${objKey}`);
+                                        metrics.openIssues = testOpen;
+                                        metrics.totalIssues = testTotal;
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                if (Array.isArray(value)) {
+                    console.log(`   Array length: ${value.length}`);
+                    if (value.length > 0) {
+                        console.log(`   First item:`, value[0]);
+                        console.log(`   First item keys:`, Object.keys(value[0] || {}));
+                    }
+                    
+                    // Try to calculate with THIS array regardless of what it contains
+                    let testOpen = 0;
+                    let testTotal = 0;
+                    value.forEach(item => {
+                        if (item && typeof item === 'object') {
+                            const state = item.state || item.State || '';
+                            const count = parseInt(item.count || item.Count || 0);
+                            if (state && count > 0) {
+                                testTotal += count;
+                                const stateLower = state.toLowerCase();
+                                if (!['closed', 'resolved', 'removed', 'done', 'completed'].some(cs => stateLower.includes(cs))) {
+                                    testOpen += count;
+                                }
+                            }
+                        }
+                    });
+                    
+                    if (testTotal > 0) {
+                        console.log(`   🎯 CALCULATED FROM ${key}: ${testOpen} open out of ${testTotal} total`);
+                        // If this looks like production data (has meaningful totals), use it
+                        if (testTotal > 100) { // Reasonable check for production data
+                            console.log(`   ✅ USING DATA FROM KEY: ${key}`);
+                            metrics.openIssues = testOpen;
+                            metrics.totalIssues = testTotal;
+                        }
+                    }
+                } else {
+                    console.log(`   📄 Non-array data, full content:`, JSON.stringify(value, null, 2));
+                }
+            });
+            
+            // Continue with other data processing...
+            
+            
+            // Continue with other data processing...
+            
+            if (data['production-by-fix-version']) {
+                console.log('🔧 Found production-by-fix-version data:', data['production-by-fix-version']);
+                const fixVersionData = data['production-by-fix-version'];
+                if (Array.isArray(fixVersionData)) {
                     const totalFromVersions = fixVersionData.reduce((sum, item) => {
+                        console.log('🔧 Fix version item:', item);
                         return sum + (item.count || item.total || item.issues || 0);
                     }, 0);
-                    if (totalFromVersions > 0) metrics.openIssues = totalFromVersions;
+                    if (totalFromVersions > 0) {
+                        metrics.openIssues = totalFromVersions;
+                        console.log('🔧 Total from fix versions:', totalFromVersions);
+                    }
                 }
+            }
+            
+            if (data['production-by-component']) {
+                console.log('🧩 Found production-by-component data:', data['production-by-component']);
             }
             
             // Process Test Automation data
             if (data['automation-summary']) {
-                // From /api/test/public/automation-summary
+                console.log('🧪 Found automation-summary data:', data['automation-summary']);
                 const automationData = data['automation-summary'];
                 metrics.totalTests = extractNestedValue(automationData, [
                     'totalTests', 'total', 'count', 'testCount'
@@ -731,55 +911,64 @@
                 metrics.passRate = extractNestedValue(automationData, [
                     'passRate', 'successRate', 'pass_rate', 'passed_percentage'
                 ]) || 0;
-                console.log('🧪 Automation summary:', { totalTests: metrics.totalTests, coverage: metrics.coverage, passRate: metrics.passRate });
+                console.log('🧪 Automation summary extracted:', { totalTests: metrics.totalTests, coverage: metrics.coverage, passRate: metrics.passRate });
             }
             
-            if (data.stats && data.stats !== data.stats) { // Different stats endpoint
-                // From /api/test/public/stats
-                const testStats = data.stats;
-                if (!metrics.totalTests) {
-                    metrics.totalTests = extractNestedValue(testStats, [
-                        'totalTests', 'total', 'count'
-                    ]) || 0;
-                }
-                if (!metrics.testsPassed) {
-                    metrics.testsPassed = extractNestedValue(testStats, [
-                        'passed', 'passedTests', 'success'
-                    ]) || 0;
-                }
-                if (!metrics.testsFailed) {
-                    metrics.testsFailed = extractNestedValue(testStats, [
-                        'failed', 'failedTests', 'failure'
-                    ]) || 0;
+            // Check for test stats endpoint
+            if (data['test-stats']) {
+                console.log('📈 Found test-stats data:', data['test-stats']);
+                const testStats = data['test-stats'];
+                    if (!metrics.totalTests) {
+                        metrics.totalTests = extractNestedValue(testStats, [
+                            'totalTests', 'total', 'count'
+                        ]) || 0;
+                    }
+                    if (!metrics.testsPassed) {
+                        metrics.testsPassed = extractNestedValue(testStats, [
+                            'passed', 'passedTests', 'success'
+                        ]) || 0;
+                    }
+                    if (!metrics.testsFailed) {
+                        metrics.testsFailed = extractNestedValue(testStats, [
+                            'failed', 'failedTests', 'failure'
+                        ]) || 0;
                 }
             }
             
             if (data['monthly-automation-status']) {
-                // From /api/test/public/monthly-automation-status
+                console.log('📅 Found monthly-automation-status data:', data['monthly-automation-status']);
                 const monthlyData = data['monthly-automation-status'];
                 if (Array.isArray(monthlyData) && monthlyData.length > 0) {
                     const latestMonth = monthlyData[monthlyData.length - 1];
+                    console.log('📅 Latest month data:', latestMonth);
                     metrics.avgExecutionTime = extractNestedValue(latestMonth, [
                         'avgExecutionTime', 'averageTime', 'executionTime', 'duration'
                     ]) || 0;
                 }
             }
             
-            // Set defaults if no data found
+            // Debug: Show all extracted metrics before defaults
+            console.log('🎯 EXTRACTED METRICS (before defaults):', metrics);
+            console.log('🎯 SPECIFIC CHECK - openIssues value:', metrics.openIssues);
+            console.log('🎯 SPECIFIC CHECK - openIssues type:', typeof metrics.openIssues);
+            console.log('🎯 SPECIFIC CHECK - totalIssues value:', metrics.totalIssues);
+            
+            // Set defaults only if no data found
             const finalMetrics = {
                 totalTests: metrics.totalTests || 856,
-                openIssues: metrics.openIssues || 12,
+                openIssues: metrics.openIssues || 0, // Use the extracted value or 0
                 coverage: metrics.coverage || 87.5,
                 passRate: metrics.passRate || 94.2,
                 testsPassed: metrics.testsPassed,
                 testsFailed: metrics.testsFailed,
                 avgExecutionTime: metrics.avgExecutionTime || 42,
                 defectDensity: metrics.defectDensity || 1.8,
+                totalIssues: metrics.totalIssues || 0,
                 source: rawData.source || 'mock',
                 lastFetch: new Date().toISOString()
             };
             
-            console.log('✅ Final processed metrics:', finalMetrics);
+            console.log('✅ FINAL PROCESSED METRICS:', finalMetrics);
             return finalMetrics;
         }
         
@@ -874,10 +1063,10 @@
                 <div class="dashboard-grid">
                     <div class="metric-card ${getCardClass(metrics.openIssues, 'issues')}">
                         <div class="metric-icon">🚨</div>
-                        <div class="metric-title">Production Issues</div>
+                        <div class="metric-title">Open Production Issues</div>
                         <div class="metric-value">${metrics.openIssues}</div>
-                        <div class="metric-subtitle">Critical & High Priority</div>
-                        <div class="metric-trend">${metrics.openIssues > 15 ? '↗ High' : '↘ Normal'}</div>
+                        <div class="metric-subtitle">${metrics.totalIssues ? `Out of ${metrics.totalIssues} total issues` : 'Active, Approved, Blocked, etc.'}</div>
+                        <div class="metric-trend">${metrics.openIssues > 15 ? '↗ High' : metrics.openIssues < 5 ? '↘ Low' : '→ Normal'}</div>
                     </div>
                     
                     <div class="metric-card success">
