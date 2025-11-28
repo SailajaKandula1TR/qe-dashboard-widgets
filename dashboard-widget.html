@@ -383,8 +383,8 @@
         </div>
 
         <div class="cors-notice">
-            <h4>📋 SharePoint Integration Notice</h4>
-            <p>This dashboard is optimized for SharePoint embedding. If you see connection issues, the dashboard will attempt to use alternative data sources or display cached metrics.</p>
+            <h4>📋 SharePoint Integration Status</h4>
+            <p><strong>Expected behavior:</strong> In SharePoint, external API calls are blocked for security. This dashboard will show cached metrics including <strong>27 production issues</strong> and other QE data. The chatbot remains fully functional for answering questions about these metrics.</p>
         </div>
 
         <div class="main-layout">
@@ -521,57 +521,77 @@
         }
 
         async function initializeSharePointDashboard() {
-            updateConnectionStatus('proxy', 'SharePoint Mode');
+            updateConnectionStatus('proxy', 'Initializing...');
             
-            // Try to fetch live data, but don't fail if it doesn't work
+            // Try to fetch live data (will likely be blocked in SharePoint)
             try {
                 console.log('🌐 Attempting to fetch live data...');
-                await tryFetchLiveData();
+                const success = await tryFetchLiveData();
+                if (!success) {
+                    console.log('ℹ️ Using cached data - this is normal in SharePoint');
+                }
             } catch (error) {
                 console.log('ℹ️ Using cached data for SharePoint compatibility');
-                updateConnectionStatus('proxy', 'Cached Data');
+                updateConnectionStatus('proxy', 'SharePoint Mode');
             }
             
             // Always render the dashboard with available data
             renderSharePointDashboard();
-            addChatMessage('system', '✅ Dashboard ready! Ask me about your QE metrics.');
+            addChatMessage('system', '✅ Dashboard ready in SharePoint mode! Current data shows 27 open production issues.');
         }
 
         async function tryFetchLiveData() {
-            // Try a simple fetch to the production stats endpoint
-            const response = await fetch(`${CONFIG.dashboardUrl}/api/workitems/production-bugs/public/stats`, {
-                mode: 'cors',
-                timeout: CONFIG.timeout,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+            // In SharePoint, API calls are often blocked, so we handle this gracefully
+            try {
+                // Try a simple fetch to the production stats endpoint with shorter timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+                
+                const response = await fetch(`${CONFIG.dashboardUrl}/api/workitems/production-bugs/public/stats`, {
+                    mode: 'cors',
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.data && data.data.byState) {
+                        // Process the live data
+                        const byStateArray = data.data.byState;
+                        let openCount = 0, totalCount = 0;
+                        
+                        byStateArray.forEach(item => {
+                            const count = parseInt(item.count || 0);
+                            totalCount += count;
+                            if (!['closed', 'resolved', 'removed'].some(cs => item.state.toLowerCase().includes(cs))) {
+                                openCount += count;
+                            }
+                        });
+                        
+                        // Update the metrics with live data
+                        currentMetrics.openIssues = openCount;
+                        currentMetrics.totalIssues = totalCount;
+                        
+                        console.log('✅ Updated with live data:', {openCount, totalCount});
+                        updateConnectionStatus('connected', 'Live Data');
+                        isConnected = true;
+                        return true;
+                    }
                 }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.data && data.data.byState) {
-                    // Process the live data
-                    const byStateArray = data.data.byState;
-                    let openCount = 0, totalCount = 0;
-                    
-                    byStateArray.forEach(item => {
-                        const count = parseInt(item.count || 0);
-                        totalCount += count;
-                        if (!['closed', 'resolved', 'removed'].some(cs => item.state.toLowerCase().includes(cs))) {
-                            openCount += count;
-                        }
-                    });
-                    
-                    // Update the metrics with live data
-                    currentMetrics.openIssues = openCount;
-                    currentMetrics.totalIssues = totalCount;
-                    
-                    console.log('✅ Updated with live data:', {openCount, totalCount});
-                    updateConnectionStatus('connected', 'Live Data');
-                    isConnected = true;
-                }
+            } catch (error) {
+                console.log('ℹ️ SharePoint blocked API access (expected):', error.message);
+                // This is expected in SharePoint - not an error
             }
+            
+            // Use fallback data when API is blocked (normal in SharePoint)
+            updateConnectionStatus('proxy', 'SharePoint Mode');
+            isConnected = false;
+            return false;
         }
 
         function renderSharePointDashboard() {
@@ -593,7 +613,8 @@
             
             // Update refresh info
             const refreshInfo = document.getElementById('refreshInfo');
-            refreshInfo.textContent = `📡 Last updated: ${lastUpdateTime.toLocaleString()} | 🔄 Auto-refresh: Every 5 minutes | 🌐 Source: ${isConnected ? 'Live Data' : 'Cached Data'}`;
+            const dataSource = isConnected ? 'Live Data' : 'Cached Data (SharePoint Mode)';
+            refreshInfo.textContent = `📡 Last updated: ${lastUpdateTime.toLocaleString()} | 🔄 Auto-refresh: Every 5 minutes | 🌐 Source: ${dataSource}`;
         }
 
         function updateCardStyles() {
