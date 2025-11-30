@@ -403,37 +403,45 @@
                         
                         <div class="metric-card success">
                             <div class="metric-icon">🧪</div>
-                            <div class="metric-title">Total Tests</div>
-                            <div class="metric-value" id="totalTestsValue">856</div>
-                            <div class="metric-subtitle">Automated test suite</div>
+                            <div class="metric-title">Automated Tests</div>
+                            <div class="metric-value" id="automatedTestsValue">1,770</div>
+                            <div class="metric-subtitle">UI + API + EPAM</div>
                             <div class="metric-trend">↗ Growing</div>
                         </div>
                         
-                        <div class="metric-card success">
-                            <div class="metric-icon">📊</div>
-                            <div class="metric-title">Coverage</div>
-                            <div class="metric-value" id="coverageValue">87.5%</div>
-                            <div class="metric-subtitle">Code coverage</div>
-                            <div class="metric-trend">→ Target: 90%</div>
+                        <div class="metric-card">
+                            <div class="metric-icon">🧪</div>
+                            <div class="metric-title">Total Tests</div>
+                            <div class="metric-value" id="totalTestsValue">2,500</div>
+                            <div class="metric-subtitle">All tests (auto + manual)</div>
+                            <div class="metric-trend">→ Complete suite</div>
                         </div>
                         
-                        <div class="metric-card success">
+                        <div class="metric-card" style="background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);">
+                            <div class="metric-icon">📊</div>
+                            <div class="metric-title">Coverage</div>
+                            <div class="metric-value" id="coverageValue">Not defined</div>
+                            <div class="metric-subtitle">Code coverage</div>
+                            <div class="metric-trend">→ TBD</div>
+                        </div>
+                        
+                        <div class="metric-card" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);">
                             <div class="metric-icon">✅</div>
                             <div class="metric-title">Pass Rate</div>
-                            <div class="metric-value" id="passRateValue">94.2%</div>
-                            <div class="metric-subtitle">7-day average</div>
-                            <div class="metric-trend">→ Target: 95%</div>
+                            <div class="metric-value" id="passRateValue">Not defined</div>
+                            <div class="metric-subtitle">Test success rate</div>
+                            <div class="metric-trend">→ TBD</div>
                         </div>
                     </div>
 
                     <div class="summary-grid">
                         <div class="summary-item">
                             <div class="summary-label">Tests Passed</div>
-                            <div class="summary-value" style="color: #26de81;" id="passedValue">806</div>
+                            <div class="summary-value" style="color: #666;" id="passedValue">TBD</div>
                         </div>
                         <div class="summary-item">
                             <div class="summary-label">Tests Failed</div>
-                            <div class="summary-value" style="color: #ff4757;" id="failedValue">50</div>
+                            <div class="summary-value" style="color: #666;" id="failedValue">TBD</div>
                         </div>
                         <div class="summary-item">
                             <div class="summary-label">Avg Execution</div>
@@ -459,7 +467,7 @@
 
                 <div class="chat-messages" id="chatMessages">
                     <div class="message system">
-                        👋 Hi! I'm your QE Assistant. Ask me about production issues (27), test coverage (87.5%), pass rates (94.2%), and more.
+                        👋 Hi! I'm your QE Assistant. Ask me about production issues (27), automated tests (1,770), total tests (2,500), and more.
                     </div>
                 </div>
 
@@ -468,6 +476,9 @@
                         <button class="quick-btn" onclick="askQuestion('Production issues?')">Issues</button>
                         <button class="quick-btn" onclick="askQuestion('Test coverage?')">Coverage</button>
                         <button class="quick-btn" onclick="askQuestion('Pass rate?')">Pass Rate</button>
+                        <button class="quick-btn" onclick="askQuestion('Bugs by fix version?')">Versions</button>
+                        <button class="quick-btn" onclick="askQuestion('Bugs by customer?')">Customers</button>
+                        <button class="quick-btn" onclick="askQuestion('Average closure time?')">Closure</button>
                         <button class="quick-btn" onclick="askQuestion('Summary?')">Summary</button>
                     </div>
                 </div>
@@ -490,13 +501,34 @@
             timeout: 5000,
             fallbackData: {
                 openIssues: 27,
-                totalIssues: 1064,
-                totalTests: 856,
-                coverage: 87.5,
-                passRate: 94.2,
-                testsPassed: 806,
-                testsFailed: 50,
-                avgExecutionTime: 42
+                totalIssues: 1065,
+                automatedTests: 1770, // Automated-UI + Automated-API + EPAM-Automated
+                totalTests: 2500, // All tests including manual
+                coverage: "Not defined",
+                passRate: "Not defined",
+                testsPassed: "Not defined",
+                testsFailed: "Not defined",
+                avgExecutionTime: 42,
+                // Additional production bug metrics
+                byFixVersion: [
+                    { fixVersion: "v2.1.0", count: 15 },
+                    { fixVersion: "v2.0.5", count: 8 },
+                    { fixVersion: "No Fix Version", count: 4 }
+                ],
+                byCustomer: [
+                    { customer: "Enterprise A", count: 12 },
+                    { customer: "Enterprise B", count: 8 },
+                    { customer: "Mid-Market", count: 7 }
+                ],
+                createdVsResolved: {
+                    created: 35,
+                    resolved: 30,
+                    trend: "↗ +5 this month"
+                },
+                avgClosureTime: {
+                    days: 8.5,
+                    trend: "↓ Improving"
+                }
             }
         };
 
@@ -568,7 +600,8 @@
                         byStateArray.forEach(item => {
                             const count = parseInt(item.count || 0);
                             totalCount += count;
-                            if (!['closed', 'resolved', 'removed'].some(cs => item.state.toLowerCase().includes(cs))) {
+                            // Exclude Closed, Removed, and Resolved states
+                            if (!['closed', 'removed', 'resolved'].some(cs => item.state.toLowerCase().includes(cs))) {
                                 openCount += count;
                             }
                         });
@@ -580,6 +613,10 @@
                         console.log('✅ Updated with live data:', {openCount, totalCount});
                         updateConnectionStatus('connected', 'Live Data');
                         isConnected = true;
+                        
+                        // Fetch additional metrics from specific endpoints
+                        await fetchAdditionalMetrics();
+                        
                         return true;
                     }
                 }
@@ -594,13 +631,100 @@
             return false;
         }
 
+        async function fetchAdditionalMetrics() {
+            // Fetch fix version data from specific endpoint
+            try {
+                const fixVersionResponse = await fetch(`${CONFIG.dashboardUrl}/api/workitems/production-bugs/public/by-fix-version`, {
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (fixVersionResponse.ok) {
+                    const fixVersionData = await fixVersionResponse.json();
+                    if (fixVersionData && fixVersionData.data) {
+                        currentMetrics.byFixVersion = fixVersionData.data;
+                        console.log('✅ Updated fix version data:', fixVersionData.data);
+                    }
+                }
+            } catch (error) {
+                console.log('ℹ️ Fix version API blocked:', error.message);
+            }
+
+            // Fetch test data from specific endpoint
+            try {
+                const testResponse = await fetch(`${CONFIG.dashboardUrl}/api/test/public/stats`, {
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (testResponse.ok) {
+                    const testData = await testResponse.json();
+                    if (testData && testData.data && testData.data.automatedTests) {
+                        // Calculate automated tests: sum of Automated-UI, Automated-API, and EPAM-Automated
+                        const breakdown = testData.data.automatedTests.breakdown;
+                        let automatedCount = 0;
+                        
+                        if (breakdown) {
+                            // Sum the specific automated test categories
+                            automatedCount += parseInt(breakdown['Automated-UI'] || 0);
+                            automatedCount += parseInt(breakdown['Automated-API'] || 0);
+                            automatedCount += parseInt(breakdown['EPAM-Automated'] || 0);
+                        }
+                        
+                        currentMetrics.automatedTests = automatedCount;
+                        
+                        // Check if total tests data is available in the API
+                        if (testData.data.totalTests) {
+                            currentMetrics.totalTests = parseInt(testData.data.totalTests);
+                        }
+                        
+                        console.log('✅ Updated test data - automated tests:', {
+                            total: automatedCount,
+                            passed: currentMetrics.testsPassed,
+                            failed: currentMetrics.testsFailed
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log('ℹ️ Test API blocked:', error.message);
+            }
+
+            // Fetch other metrics if endpoints are available
+            try {
+                const customerResponse = await fetch(`${CONFIG.dashboardUrl}/api/workitems/production-bugs/public/by-customer`, {
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (customerResponse.ok) {
+                    const customerData = await customerResponse.json();
+                    if (customerData && customerData.data) {
+                        currentMetrics.byCustomer = customerData.data;
+                        console.log('✅ Updated customer data:', customerData.data);
+                    }
+                }
+            } catch (error) {
+                console.log('ℹ️ Customer API blocked:', error.message);
+            }
+        }
+
         function renderSharePointDashboard() {
             // Update the metric values
             document.getElementById('openIssuesValue').textContent = currentMetrics.openIssues;
+            document.getElementById('automatedTestsValue').textContent = currentMetrics.automatedTests.toLocaleString();
             document.getElementById('totalTestsValue').textContent = currentMetrics.totalTests.toLocaleString();
-            document.getElementById('coverageValue').textContent = `${currentMetrics.coverage}%`;
-            document.getElementById('passRateValue').textContent = `${currentMetrics.passRate}%`;
-            document.getElementById('passedValue').textContent = currentMetrics.testsPassed.toLocaleString();
+            document.getElementById('coverageValue').textContent = currentMetrics.coverage;
+            document.getElementById('passRateValue').textContent = currentMetrics.passRate;
+            document.getElementById('passedValue').textContent = currentMetrics.testsPassed;
             document.getElementById('failedValue').textContent = currentMetrics.testsFailed;
             document.getElementById('executionValue').textContent = `${currentMetrics.avgExecutionTime}min`;
             
@@ -624,7 +748,7 @@
             
             // Update other cards as needed
             const cards = document.querySelectorAll('.metric-card');
-            if (cards.length >= 3) {
+            if (cards.length >= 4) {
                 cards[2].className = `metric-card ${getCardClass(currentMetrics.coverage, 'coverage')}`;
                 cards[3].className = `metric-card ${getCardClass(currentMetrics.passRate, 'passRate')}`;
             }
@@ -633,16 +757,25 @@
         function getCardClass(value, type) {
             switch(type) {
                 case 'issues': return value > 20 ? 'critical' : value > 10 ? 'warning' : 'success';
-                case 'coverage': return value < 70 ? 'critical' : value < 85 ? 'warning' : 'success';
-                case 'passRate': return value < 85 ? 'critical' : value < 95 ? 'warning' : 'success';
+                case 'coverage': return typeof value === 'number' ? (value < 70 ? 'critical' : value < 85 ? 'warning' : 'success') : '';
+                case 'passRate': return typeof value === 'number' ? (value < 85 ? 'critical' : value < 95 ? 'warning' : 'success') : '';
                 default: return 'success';
             }
         }
 
         function calculateQualityScore(metrics) {
             let score = 0;
-            score += metrics.passRate > 95 ? 25 : metrics.passRate > 85 ? 20 : 10;
-            score += metrics.coverage > 90 ? 25 : metrics.coverage > 80 ? 20 : 10;
+            // Only calculate based on available metrics
+            if (typeof metrics.passRate === 'number') {
+                score += metrics.passRate > 95 ? 25 : metrics.passRate > 85 ? 20 : 10;
+            } else {
+                score += 10; // Default when not defined
+            }
+            if (typeof metrics.coverage === 'number') {
+                score += metrics.coverage > 90 ? 25 : metrics.coverage > 80 ? 20 : 10;
+            } else {
+                score += 10; // Default when not defined
+            }
             score += metrics.openIssues < 10 ? 25 : metrics.openIssues < 15 ? 20 : 10;
             score += 25; // Base score
             return Math.min(100, score);
@@ -697,30 +830,135 @@
         function generateResponse(userMessage) {
             const message = userMessage.toLowerCase();
 
+            if (message.includes('without fix version') || message.includes('no fix version') || message.includes('missing fix version')) {
+                // Calculate issues without fix version using the dedicated API data structure
+                const versions = currentMetrics.byFixVersion || [];
+                
+                // Look for items with null, undefined, empty, or "No Fix Version" entries
+                const withoutVersionItem = versions.find(v => 
+                    !v.fixVersion || 
+                    v.fixVersion === null || 
+                    v.fixVersion.toLowerCase().includes('no fix version') ||
+                    v.fixVersion.toLowerCase().includes('unassigned') ||
+                    v.fixVersion.toLowerCase().includes('none')
+                );
+                
+                const withoutVersionCount = withoutVersionItem ? withoutVersionItem.count : 0;
+                
+                return `📋 **Issues without Fix Version**: <span class="metric-highlight">${withoutVersionCount} issues</span> don't have an assigned fix version. ${withoutVersionCount > 5 ? '⚠️ Consider triaging these!' : '✅ Good triage coverage.'}`;
+            }
+
+            // Check for specific version queries (e.g., "issues with 6.0.00 fix version")
+            if (message.includes('with') && message.includes('fix version') || message.includes('version')) {
+                // Extract version number from the message
+                const versionMatch = message.match(/(\d+\.\d+\.\d+|\d+\.\d+|v\d+\.\d+\.\d+|v\d+\.\d+)/);
+                if (versionMatch) {
+                    const searchVersion = versionMatch[1];
+                    const versions = currentMetrics.byFixVersion || [];
+                    
+                    // Find the specific version (case-insensitive, flexible matching)
+                    const versionItem = versions.find(v => 
+                        v.fixVersion && 
+                        (v.fixVersion.toLowerCase().includes(searchVersion.toLowerCase()) ||
+                         v.fixVersion.toLowerCase().replace('v', '') === searchVersion.toLowerCase())
+                    );
+                    
+                    if (versionItem) {
+                        return `📋 **Issues with ${versionItem.fixVersion}**: <span class="metric-highlight">${versionItem.count} issues</span> are assigned to this fix version.`;
+                    } else {
+                        return `📋 **Issues with ${searchVersion}**: <span class="metric-highlight">0 issues</span> found for this fix version. It may not exist or have no assigned issues.`;
+                    }
+                }
+            }
+
             if (message.includes('issues') || message.includes('production')) {
                 const issues = currentMetrics.openIssues;
                 return `We have <span class="metric-highlight">${issues} open production issues</span>. ${issues > 15 ? '⚠️ Above threshold!' : '✅ Within normal range.'} This includes Active, Approved, and Blocked items.`;
             }
 
+            if (message.includes('fix version') || message.includes('version')) {
+                const versions = currentMetrics.byFixVersion || [];
+                if (versions.length > 0) {
+                    // Filter out "no fix version" entries and show actual versions
+                    const actualVersions = versions.filter(v => 
+                        v.fixVersion && 
+                        !v.fixVersion.toLowerCase().includes('no fix version') &&
+                        !v.fixVersion.toLowerCase().includes('unassigned') &&
+                        !v.fixVersion.toLowerCase().includes('none')
+                    );
+                    
+                    if (actualVersions.length > 0) {
+                        const versionList = actualVersions.map(v => `${v.fixVersion}: ${v.count} bugs`).join(', ');
+                        return `📋 **Bugs by Fix Version**: ${versionList}. Most issues are in <span class="metric-highlight">${actualVersions[0]?.fixVersion}</span> with ${actualVersions[0]?.count} bugs.`;
+                    } else {
+                        return `📋 **Bugs by Fix Version**: Most issues don't have assigned fix versions yet. Consider triaging them.`;
+                    }
+                }
+                return `📋 **Bugs by Fix Version**: Data being updated. Check back shortly for version breakdown.`;
+            }
+
+            if (message.includes('customer') || message.includes('client')) {
+                const customers = currentMetrics.byCustomer || [];
+                if (customers.length > 0) {
+                    const customerList = customers.map(c => `${c.customer}: ${c.count} issues`).join(', ');
+                    return `🏢 **Bugs by Customer**: ${customerList}. <span class="metric-highlight">${customers[0]?.customer}</span> has the most issues with ${customers[0]?.count} bugs.`;
+                }
+                return `🏢 **Bugs by Customer**: Data being updated. Check back shortly for customer breakdown.`;
+            }
+
+            if (message.includes('created') || message.includes('resolved') || message.includes('closure')) {
+                const cvr = currentMetrics.createdVsResolved || {};
+                const closure = currentMetrics.avgClosureTime || {};
+                if (cvr.created && cvr.resolved) {
+                    return `📈 **Created vs Resolved**: ${cvr.created} created, ${cvr.resolved} resolved this month ${cvr.trend}. Average closure time: <span class="metric-highlight">${closure.days} days</span> ${closure.trend}.`;
+                }
+                return `📈 **Created vs Resolved**: Data being updated. Check back shortly for creation/resolution metrics.`;
+            }
+
+            if (message.includes('closure time') || message.includes('avg') || message.includes('average')) {
+                const closure = currentMetrics.avgClosureTime || {};
+                if (closure.days) {
+                    return `⏱️ **Average Closure Time**: <span class="metric-highlight">${closure.days} days</span> ${closure.trend}. This is the average time from bug creation to resolution.`;
+                }
+                return `⏱️ **Average Closure Time**: Data being updated. Check back shortly for closure time metrics.`;
+            }
+
             if (message.includes('coverage')) {
                 const coverage = currentMetrics.coverage;
-                return `Test coverage is <span class="metric-highlight">${coverage}%</span>. ${coverage >= 90 ? '✅ Excellent!' : coverage >= 80 ? '👍 Good' : '⚠️ Below target'} Target is 90%+.`;
+                if (typeof coverage === 'number') {
+                    return `Test coverage is <span class="metric-highlight">${coverage}%</span>. ${coverage >= 90 ? '✅ Excellent!' : coverage >= 80 ? '👍 Good' : '⚠️ Below target'} Target is 90%+.`;
+                } else {
+                    return `Test coverage is <span class="metric-highlight">not defined</span>. Please configure the coverage endpoint to get real-time coverage data.`;
+                }
             }
 
             if (message.includes('pass') || message.includes('rate')) {
                 const rate = currentMetrics.passRate;
-                return `Pass rate is <span class="metric-highlight">${rate}%</span>. ${rate >= 95 ? '🎯 Excellent!' : '📈 Target is 95%+'} This is our 7-day average.`;
+                if (typeof rate === 'number') {
+                    return `Pass rate is <span class="metric-highlight">${rate}%</span>. ${rate >= 95 ? '🎯 Excellent!' : '📈 Target is 95%+'} This is our 7-day average.`;
+                } else {
+                    return `Pass rate is <span class="metric-highlight">not defined</span>. Please configure the test results endpoint to get real-time pass rate data.`;
+                }
             }
 
             if (message.includes('total') || message.includes('tests')) {
                 const total = currentMetrics.totalTests;
-                const passed = currentMetrics.testsPassed;
-                return `We have <span class="metric-highlight">${total.toLocaleString()} total tests</span> with <span class="metric-highlight">${passed.toLocaleString()} passing</span>. That's a ${currentMetrics.passRate}% success rate.`;
+                const automated = currentMetrics.automatedTests;
+                return `We have <span class="metric-highlight">${total.toLocaleString()} total tests</span> including <span class="metric-highlight">${automated.toLocaleString()} automated tests</span>. Pass/fail data will be available once endpoints are configured.`;
+            }
+
+            if (message.includes('automated')) {
+                const automated = currentMetrics.automatedTests;
+                return `We have <span class="metric-highlight">${automated.toLocaleString()} automated tests</span> (UI + API + EPAM automated). This is the sum of Automated-UI, Automated-API, and EPAM-Automated test categories.`;
             }
 
             if (message.includes('summary')) {
                 const qualityScore = calculateQualityScore(currentMetrics);
-                return `📊 **QE Summary**: ${currentMetrics.openIssues} open issues, ${currentMetrics.coverage}% coverage, ${currentMetrics.passRate}% pass rate, ${currentMetrics.totalTests.toLocaleString()} tests. Quality Score: ${qualityScore}%`;
+                const closure = currentMetrics.avgClosureTime || {};
+                const cvr = currentMetrics.createdVsResolved || {};
+                const coverageText = typeof currentMetrics.coverage === 'number' ? `${currentMetrics.coverage}% coverage` : 'coverage TBD';
+                const passRateText = typeof currentMetrics.passRate === 'number' ? `${currentMetrics.passRate}% pass rate` : 'pass rate TBD';
+                return `📊 **QE Summary**: ${currentMetrics.openIssues} open issues, ${coverageText}, ${passRateText}, ${currentMetrics.totalTests.toLocaleString()} total tests (${currentMetrics.automatedTests.toLocaleString()} automated). Quality Score: ${qualityScore}%. ${closure.days ? `Avg closure: ${closure.days} days.` : ''} ${cvr.created ? `This month: +${cvr.created - cvr.resolved} net issues.` : ''}`;
             }
 
             if (message.includes('quality') || message.includes('score')) {
@@ -728,7 +966,8 @@
                 return `Quality Score is <span class="metric-highlight">${qualityScore}%</span>. This is calculated from pass rate, coverage, and open issues metrics.`;
             }
 
-            return `I can help with questions about production issues (${currentMetrics.openIssues}), test coverage (${currentMetrics.coverage}%), pass rates (${currentMetrics.passRate}%), and more. What would you like to know?`;
+            // Enhanced help message
+            return `I can help with: production issues (${currentMetrics.openIssues}), test coverage (${currentMetrics.coverage}%), pass rates (${currentMetrics.passRate}%), bugs by fix version, customer breakdown, created vs resolved trends, and average closure time. What would you like to know?`;
         }
 
         // Auto-refresh for SharePoint
