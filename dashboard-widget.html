@@ -561,15 +561,22 @@
         async function initializeSharePointDashboard() {
             updateConnectionStatus('proxy', 'Initializing...');
             
-            // Try to fetch live data (will likely be blocked in SharePoint)
+            console.log('🚀 Starting SharePoint dashboard initialization...');
+            console.log('📋 Initial fallback metrics:', JSON.stringify(currentMetrics));
+            
+            // Try to fetch live data with proper error handling
             try {
                 console.log('🌐 Attempting to fetch live data...');
                 const success = await tryFetchLiveData();
+                console.log('📋 After tryFetchLiveData - success:', success);
+                console.log('📋 Current metrics after fetch:', JSON.stringify(currentMetrics));
+                
                 if (!success) {
-                    console.log('ℹ️ Using cached data - this is normal in SharePoint');
+                    console.log('ℹ️ Live data fetch failed - using fallback data');
+                    updateConnectionStatus('proxy', 'SharePoint Mode');
                 }
             } catch (error) {
-                console.log('ℹ️ Using cached data for SharePoint compatibility');
+                console.log('ℹ️ Data fetch error:', error.message);
                 updateConnectionStatus('proxy', 'SharePoint Mode');
             }
             
@@ -586,11 +593,14 @@
         }
 
         async function tryFetchLiveData() {
+            // Test API accessibility first
+            console.log('🌐 Testing API endpoint accessibility...');
+            
             // In SharePoint, API calls are often blocked, so we handle this gracefully
             try {
                 // Try a simple fetch to the production stats endpoint with shorter timeout
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
                 
                 const response = await fetch(`${CONFIG.dashboardUrl}/api/workitems/production-bugs/public/stats`, {
                     mode: 'cors',
@@ -602,6 +612,7 @@
                 });
                 
                 clearTimeout(timeoutId);
+                console.log('📋 Production API response status:', response.status);
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -666,51 +677,68 @@
                 console.log('ℹ️ Fix version API blocked:', error.message);
             }
 
-            // Fetch test data from specific endpoint
+            // Fetch test data from specific endpoint with timeout and proper error handling
+            console.log('📊 Attempting to fetch test data...');
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    controller.abort();
+                    console.log('⏰ Test API timeout after 8 seconds');
+                }, 8000);
+                
                 const testResponse = await fetch(`${CONFIG.dashboardUrl}/api/test/public/stats`, {
                     mode: 'cors',
+                    signal: controller.signal,
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     }
                 });
                 
+                clearTimeout(timeoutId);
+                console.log('📊 Test API response status:', testResponse.status);
+                
                 if (testResponse.ok) {
                     const testData = await testResponse.json();
-                    if (testData && testData.data && testData.data.automatedTests) {
-                        // Calculate automated tests: sum of Automated-UI, Automated-API, and EPAM-Automated
-                        const breakdown = testData.data.automatedTests.breakdown;
-                        let automatedCount = 0;
+                    console.log('📊 Raw test API response:', testData);
+                    
+                    if (testData && testData.success && testData.data) {
+                        // Update total tests first - this is the primary value we need
+                        if (testData.data.totalTests) {
+                            currentMetrics.totalTests = parseInt(testData.data.totalTests);
+                            console.log('✅ Updated totalTests from API:', currentMetrics.totalTests);
+                        }
                         
-                        if (breakdown) {
+                        // Update automated tests from breakdown
+                        if (testData.data.automatedTests && testData.data.automatedTests.breakdown) {
+                            const breakdown = testData.data.automatedTests.breakdown;
+                            let automatedCount = 0;
+                            
                             // Sum the specific automated test categories
                             automatedCount += parseInt(breakdown['Automated-UI'] || 0);
                             automatedCount += parseInt(breakdown['Automated-API'] || 0);
                             automatedCount += parseInt(breakdown['EPAM-Automated'] || 0);
+                            
+                            currentMetrics.automatedTests = automatedCount;
+                            console.log('✅ Updated automatedTests from API:', currentMetrics.automatedTests);
                         }
                         
-                        currentMetrics.automatedTests = automatedCount;
-                        
-                        // Check if total tests data is available in the API
-                        if (testData.data.totalTests) {
-                            currentMetrics.totalTests = parseInt(testData.data.totalTests);
-                        } else {
-                            // If no total tests provided, keep fallback or use automated count
-                            currentMetrics.totalTests = automatedCount;
-                        }
-                        
-                        console.log('✅ Updated test data:', {
+                        console.log('✅ Final updated test metrics:', {
                             automatedTests: currentMetrics.automatedTests,
                             totalTests: currentMetrics.totalTests
                         });
                         
-                        // Force UI update
+                        // Force UI update after API data received
                         renderSharePointDashboard();
+                    } else {
+                        console.log('⚠️ Test API response structure unexpected:', testData);
                     }
+                } else {
+                    console.log('❌ Test API response not OK:', testResponse.status, testResponse.statusText);
                 }
             } catch (error) {
-                console.log('ℹ️ Test API blocked:', error.message);
+                console.log('❌ Test API error - likely CORS blocked in SharePoint:', error.message);
+                console.log('📊 Using fallback test values due to API blocking');
             }
 
             // Fetch other metrics if endpoints are available
