@@ -722,6 +722,50 @@
             } catch (error) {
                 console.log('ℹ️ Customer API blocked:', error.message);
             }
+
+            // Fetch repositories data for coverage calculation
+            try {
+                const repositoriesResponse = await fetch(`${CONFIG.dashboardUrl}/api/repositories`, {
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (repositoriesResponse.ok) {
+                    const repositoriesData = await repositoriesResponse.json();
+                    if (repositoriesData && Array.isArray(repositoriesData)) {
+                        // Calculate average coverage from all repositories
+                        let totalCoverage = 0;
+                        let reposWithCoverage = 0;
+                        
+                        repositoriesData.forEach(repo => {
+                            if (repo.sonarData && typeof repo.sonarData.coverage === 'number' && repo.sonarData.coverage > 0) {
+                                totalCoverage += repo.sonarData.coverage;
+                                reposWithCoverage++;
+                            }
+                        });
+                        
+                        if (reposWithCoverage > 0) {
+                            const averageCoverage = Math.round((totalCoverage / reposWithCoverage) * 10) / 10; // Round to 1 decimal place
+                            currentMetrics.coverage = averageCoverage;
+                            console.log(`✅ Updated coverage data: ${averageCoverage}% (from ${reposWithCoverage} repositories)`);
+                        } else {
+                            console.log('ℹ️ No repositories with coverage data found');
+                            currentMetrics.coverage = "No data";
+                        }
+                        
+                        // Store repositories data for detailed analysis
+                        currentMetrics.repositories = repositoriesData;
+                        
+                        // Force UI update after coverage calculation
+                        renderSharePointDashboard();
+                    }
+                }
+            } catch (error) {
+                console.log('ℹ️ Repositories API blocked:', error.message);
+            }
         }
 
         function renderSharePointDashboard() {
@@ -738,7 +782,10 @@
                 currentMetrics.totalTests.toLocaleString() : currentMetrics.totalTests;
             document.getElementById('totalTestsValue').textContent = totalValue;
             
-            document.getElementById('coverageValue').textContent = currentMetrics.coverage;
+            // Handle coverage display
+            const coverageValue = typeof currentMetrics.coverage === 'number' ? 
+                `${currentMetrics.coverage}%` : currentMetrics.coverage;
+            document.getElementById('coverageValue').textContent = coverageValue;
             document.getElementById('passRateValue').textContent = currentMetrics.passRate;
             document.getElementById('passedValue').textContent = currentMetrics.testsPassed;
             document.getElementById('failedValue').textContent = currentMetrics.testsFailed;
@@ -950,8 +997,82 @@
 
             if (message.includes('coverage')) {
                 const coverage = currentMetrics.coverage;
+                const repositories = currentMetrics.repositories || [];
+                
+                // Check for specific coverage queries
+                if (message.includes('below') || message.includes('under') || message.includes('<')) {
+                    // Extract threshold number
+                    const thresholdMatch = message.match(/(\d+)/);
+                    const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 50;
+                    
+                    const lowCoverageRepos = repositories.filter(repo => 
+                        repo.sonarData && 
+                        typeof repo.sonarData.coverage === 'number' && 
+                        repo.sonarData.coverage < threshold
+                    );
+                    
+                    if (lowCoverageRepos.length > 0) {
+                        const repoList = lowCoverageRepos
+                            .sort((a, b) => a.sonarData.coverage - b.sonarData.coverage)
+                            .slice(0, 10) // Show top 10 worst
+                            .map(repo => `${repo.githubRepoName}: <span class="metric-highlight">${repo.sonarData.coverage}%</span>`)
+                            .join(', ');
+                        return `📊 **Repos below ${threshold}% coverage**: Found <span class="metric-highlight">${lowCoverageRepos.length} repositories</span> below ${threshold}%. Lowest: ${repoList}.`;
+                    } else {
+                        return `✅ **Great news!** No repositories found below <span class="metric-highlight">${threshold}%</span> coverage threshold.`;
+                    }
+                }
+                
+                if (message.includes('above') || message.includes('over') || message.includes('>')) {
+                    // Extract threshold number
+                    const thresholdMatch = message.match(/(\d+)/);
+                    const threshold = thresholdMatch ? parseInt(thresholdMatch[1]) : 90;
+                    
+                    const highCoverageRepos = repositories.filter(repo => 
+                        repo.sonarData && 
+                        typeof repo.sonarData.coverage === 'number' && 
+                        repo.sonarData.coverage > threshold
+                    );
+                    
+                    if (highCoverageRepos.length > 0) {
+                        const repoList = highCoverageRepos
+                            .sort((a, b) => b.sonarData.coverage - a.sonarData.coverage)
+                            .slice(0, 10) // Show top 10 best
+                            .map(repo => `${repo.githubRepoName}: <span class="metric-highlight">${repo.sonarData.coverage}%</span>`)
+                            .join(', ');
+                        return `🎯 **High coverage repos**: Found <span class="metric-highlight">${highCoverageRepos.length} repositories</span> above ${threshold}%. Best: ${repoList}.`;
+                    } else {
+                        return `📈 **Improvement opportunity**: No repositories found above <span class="metric-highlight">${threshold}%</span> coverage threshold.`;
+                    }
+                }
+                
+                if (message.includes('repo') || message.includes('repository') || message.includes('individual') || message.includes('detail')) {
+                    if (repositories.length > 0) {
+                        const reposWithCoverage = repositories
+                            .filter(repo => repo.sonarData && typeof repo.sonarData.coverage === 'number')
+                            .sort((a, b) => b.sonarData.coverage - a.sonarData.coverage)
+                            .slice(0, 15); // Show top 15
+                        
+                        const repoList = reposWithCoverage
+                            .map(repo => {
+                                const coverage = repo.sonarData.coverage;
+                                const status = coverage >= 90 ? '🟢' : coverage >= 70 ? '🟡' : '🔴';
+                                return `${status} ${repo.githubRepoName}: ${coverage}%`;
+                            })
+                            .join(', ');
+                        
+                        return `📊 **Repository Coverage Details**: ${repoList}. Legend: 🟢 Excellent (90%+), 🟡 Good (70%+), 🔴 Needs improvement (<70%).`;
+                    } else {
+                        return `📊 **Repository data**: Not available yet. Coverage data is being loaded.`;
+                    }
+                }
+                
+                // Default overall coverage response
                 if (typeof coverage === 'number') {
-                    return `Test coverage is <span class="metric-highlight">${coverage}%</span>. ${coverage >= 90 ? '✅ Excellent!' : coverage >= 80 ? '👍 Good' : '⚠️ Below target'} Target is 90%+.`;
+                    const repoCount = repositories.filter(repo => 
+                        repo.sonarData && typeof repo.sonarData.coverage === 'number'
+                    ).length;
+                    return `Test coverage average is <span class="metric-highlight">${coverage}%</span> across ${repoCount} repositories. ${coverage >= 90 ? '✅ Excellent!' : coverage >= 80 ? '👍 Good' : '⚠️ Below target'} Target is 90%+. Ask about "repos below 50%" or "repos above 90%" for details.`;
                 } else {
                     return `Test coverage is <span class="metric-highlight">not defined</span>. Please configure the coverage endpoint to get real-time coverage data.`;
                 }
