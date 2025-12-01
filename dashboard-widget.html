@@ -404,7 +404,7 @@
                         <div class="metric-card success">
                             <div class="metric-icon">🧪</div>
                             <div class="metric-title">Automated Tests</div>
-                            <div class="metric-value" id="automatedTestsValue">1,770</div>
+                            <div class="metric-value" id="automatedTestsValue">Loading...</div>
                             <div class="metric-subtitle">UI + API + EPAM</div>
                             <div class="metric-trend">↗ Growing</div>
                         </div>
@@ -412,7 +412,7 @@
                         <div class="metric-card">
                             <div class="metric-icon">🧪</div>
                             <div class="metric-title">Total Tests</div>
-                            <div class="metric-value" id="totalTestsValue">2,500</div>
+                            <div class="metric-value" id="totalTestsValue">Loading...</div>
                             <div class="metric-subtitle">All tests (auto + manual)</div>
                             <div class="metric-trend">→ Complete suite</div>
                         </div>
@@ -467,7 +467,7 @@
 
                 <div class="chat-messages" id="chatMessages">
                     <div class="message system">
-                        👋 Hi! I'm your QE Assistant. Ask me about production issues (27), automated tests (1,770), total tests (2,500), and more.
+                        👋 Hi! I'm your QE Assistant. Ask me about production issues, automated tests, total tests, and more.
                     </div>
                 </div>
 
@@ -502,8 +502,8 @@
             fallbackData: {
                 openIssues: 27,
                 totalIssues: 1065,
-                automatedTests: 1770, // Automated-UI + Automated-API + EPAM-Automated
-                totalTests: 2500, // All tests including manual
+                automatedTests: 1770, // Will be updated from API
+                totalTests: 2500, // Will be updated from API if available
                 coverage: "Not defined",
                 passRate: "Not defined",
                 testsPassed: "Not defined",
@@ -569,7 +569,9 @@
             
             // Always render the dashboard with available data
             renderSharePointDashboard();
-            addChatMessage('system', '✅ Dashboard ready in SharePoint mode! Current data shows 27 open production issues.');
+            const automatedCount = currentMetrics.automatedTests;
+            const openIssues = currentMetrics.openIssues;
+            addChatMessage('system', `✅ Dashboard ready! Current data: ${openIssues} open production issues, ${automatedCount.toLocaleString()} automated tests.`);
         }
 
         async function tryFetchLiveData() {
@@ -682,13 +684,18 @@
                         // Check if total tests data is available in the API
                         if (testData.data.totalTests) {
                             currentMetrics.totalTests = parseInt(testData.data.totalTests);
+                        } else {
+                            // If no total tests provided, keep fallback or use automated count
+                            currentMetrics.totalTests = automatedCount;
                         }
                         
-                        console.log('✅ Updated test data - automated tests:', {
-                            total: automatedCount,
-                            passed: currentMetrics.testsPassed,
-                            failed: currentMetrics.testsFailed
+                        console.log('✅ Updated test data:', {
+                            automatedTests: currentMetrics.automatedTests,
+                            totalTests: currentMetrics.totalTests
                         });
+                        
+                        // Force UI update
+                        renderSharePointDashboard();
                     }
                 }
             } catch (error) {
@@ -720,8 +727,17 @@
         function renderSharePointDashboard() {
             // Update the metric values
             document.getElementById('openIssuesValue').textContent = currentMetrics.openIssues;
-            document.getElementById('automatedTestsValue').textContent = currentMetrics.automatedTests.toLocaleString();
-            document.getElementById('totalTestsValue').textContent = currentMetrics.totalTests.toLocaleString();
+            
+            // Handle automated tests display
+            const automatedValue = typeof currentMetrics.automatedTests === 'number' ? 
+                currentMetrics.automatedTests.toLocaleString() : currentMetrics.automatedTests;
+            document.getElementById('automatedTestsValue').textContent = automatedValue;
+            
+            // Handle total tests display
+            const totalValue = typeof currentMetrics.totalTests === 'number' ? 
+                currentMetrics.totalTests.toLocaleString() : currentMetrics.totalTests;
+            document.getElementById('totalTestsValue').textContent = totalValue;
+            
             document.getElementById('coverageValue').textContent = currentMetrics.coverage;
             document.getElementById('passRateValue').textContent = currentMetrics.passRate;
             document.getElementById('passedValue').textContent = currentMetrics.testsPassed;
@@ -797,7 +813,7 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             
-            if (content.includes('<span class="metric-highlight">')) {
+            if (content.includes('<span class="metric-highlight">') || content.includes('<a href=')) {
                 messageDiv.innerHTML = content;
             } else {
                 messageDiv.textContent = content;
@@ -868,6 +884,15 @@
                     } else {
                         return `📋 **Issues with ${searchVersion}**: <span class="metric-highlight">0 issues</span> found for this fix version. It may not exist or have no assigned issues.`;
                     }
+                }
+            }
+
+            if (message.includes('closed') && (message.includes('issues') || message.includes('2025') || message.includes('year'))) {
+                // Handle questions about closed issues
+                if (message.includes('2025') || message.includes('year')) {
+                    return `📋 **Issues Closed in 2025**: I don't have access to historical closure data by year. To get this information, please check the detailed dashboard at <a href="http://10.188.16.87:5001/" target="_blank" style="color: #1976d2; text-decoration: underline;">http://10.188.16.87:5001/</a> for 2025 closure statistics.`;
+                } else {
+                    return `📋 **Closed Issues**: I don't have access to closed issues data. Currently showing only <span class="metric-highlight">${currentMetrics.openIssues} open issues</span>. For closure statistics, please check the detailed dashboard at <a href="http://10.188.16.87:5001/" target="_blank" style="color: #1976d2; text-decoration: underline;">http://10.188.16.87:5001/</a>.`;
                 }
             }
 
@@ -967,7 +992,9 @@
             }
 
             // Enhanced help message
-            return `I can help with: production issues (${currentMetrics.openIssues}), test coverage (${currentMetrics.coverage}%), pass rates (${currentMetrics.passRate}%), bugs by fix version, customer breakdown, created vs resolved trends, and average closure time. What would you like to know?`;
+            const coverageText = typeof currentMetrics.coverage === 'number' ? `${currentMetrics.coverage}%` : currentMetrics.coverage;
+            const passRateText = typeof currentMetrics.passRate === 'number' ? `${currentMetrics.passRate}%` : currentMetrics.passRate;
+            return `I can help with: production issues (${currentMetrics.openIssues}), automated tests (${currentMetrics.automatedTests.toLocaleString()}), total tests (${typeof currentMetrics.totalTests === 'number' ? currentMetrics.totalTests.toLocaleString() : currentMetrics.totalTests}), coverage (${coverageText}), pass rates (${passRateText}), bugs by fix version, customer breakdown, and more. What would you like to know?`;
         }
 
         // Auto-refresh for SharePoint
