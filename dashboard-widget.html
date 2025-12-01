@@ -362,6 +362,173 @@
             border-radius: 6px;
         }
 
+        /* Release Calendar Styles */
+        .release-calendar {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #FF6B6B;
+        }
+
+        .calendar-title {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .release-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .release-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #dee2e6;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .release-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .release-item.current {
+            border-left-color: #4CAF50;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+        }
+
+        .release-item.next {
+            border-left-color: #2196F3;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        }
+
+        .release-item.upcoming {
+            border-left-color: #FF9800;
+            background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%);
+        }
+
+        .release-item.major {
+            border-left-color: #9C27B0;
+            background: linear-gradient(135deg, #f3e5f5 0%, #fce4ec 100%);
+        }
+
+        .release-badge {
+            position: absolute;
+            top: -8px;
+            right: 20px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .release-item.current .release-badge {
+            background: #4CAF50;
+        }
+
+        .release-item.next .release-badge {
+            background: #2196F3;
+        }
+
+        .release-item.upcoming .release-badge {
+            background: #FF9800;
+        }
+
+        .release-item.major .release-badge {
+            background: #9C27B0;
+        }
+
+        .release-info {
+            margin-top: 8px;
+        }
+
+        .release-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .release-date {
+            color: #5d4e75;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .release-status {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .release-phases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .phase {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .phase.completed {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .phase.pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .release-note {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .release-calendar {
+                padding: 15px;
+                margin: 15px 0;
+            }
+            
+            .release-item {
+                padding: 15px;
+            }
+            
+            .release-name {
+                font-size: 1.1em;
+            }
+            
+            .release-phases {
+                flex-direction: column;
+                gap: 6px;
+            }
+            
+            .phase {
+                text-align: center;
+            }
+        }
+
         .metric-highlight {
             background: #e3f2fd;
             color: #1976d2;
@@ -455,6 +622,43 @@
 
                     <div class="refresh-info" id="refreshInfo">
                         📡 Dashboard optimized for SharePoint | 🔄 Auto-refresh: Every 5 minutes | 🌐 Source: SharePoint-ready
+                    </div>
+
+                    <!-- Release Calendar Widget -->
+                    <div class="release-calendar" id="releaseCalendar">
+                        <h3 class="calendar-title">📅 Release Calendar - Q1 2026</h3>
+                        <div class="release-timeline">
+                            <div class="release-item current" id="currentRelease">
+                                <div class="release-badge">CURRENT</div>
+                                <div class="release-info">
+                                    <div class="release-name">5.9.20 Release</div>
+                                    <div class="release-date">Released: 26-Nov-2025</div>
+                                    <div class="release-status">✅ General Release</div>
+                                </div>
+                            </div>
+                            <div class="release-item next" id="nextRelease">
+                                <div class="release-badge">NEXT</div>
+                                <div class="release-info">
+                                    <div class="release-name">5.9.21 Release</div>
+                                    <div class="release-date">Target: 13-Jan-2026</div>
+                                    <div class="release-status">🚧 In Development</div>
+                                    <div class="release-phases">
+                                        <span class="phase completed">Branch Created (27-Nov)</span>
+                                        <span class="phase pending">Dev Close (07-Jan)</span>
+                                        <span class="phase pending">General Release (13-Jan)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="release-item upcoming" id="upcomingRelease">
+                                <div class="release-badge">UPCOMING</div>
+                                <div class="release-info">
+                                    <div class="release-name">Feature Release 6.0.0</div>
+                                    <div class="release-date">Target: 11-Mar-2026</div>
+                                    <div class="release-status">📋 Planning Phase</div>
+                                    <div class="release-note">PM sign off: 20-Feb | Dev close: 27-Feb</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1792,6 +1996,9 @@
             const refreshInfo = document.getElementById('refreshInfo');
             const dataSource = isConnected ? 'Live Data' : 'Cached Data (SharePoint Mode)';
             refreshInfo.textContent = `📡 Last updated: ${lastUpdateTime.toLocaleString()} | 🔄 Auto-refresh: Every 5 minutes | 🌐 Source: ${dataSource}`;
+            
+            // Update release calendar
+            updateReleaseCalendar();
         }
 
         function updateCardStyles() {
@@ -2115,10 +2322,355 @@
                 return `Quality Score is <span class="metric-highlight">${qualityScore}%</span>. This is calculated from pass rate, coverage, and open issues metrics. Ask "how is quality score calculated" for detailed breakdown.`;
             }
 
+            // Handle release-related questions
+            const releaseResponse = handleReleaseQueries(message);
+            if (releaseResponse) {
+                return releaseResponse;
+            }
+
             // Enhanced help message
             const coverageText = typeof currentMetrics.coverage === 'number' ? `${currentMetrics.coverage}%` : currentMetrics.coverage;
             const passRateText = typeof currentMetrics.passRate === 'number' ? `${currentMetrics.passRate}%` : currentMetrics.passRate;
-            return `I can help with: production issues (${currentMetrics.openIssues}), automated tests (${currentMetrics.automatedTests.toLocaleString()}), total tests (${typeof currentMetrics.totalTests === 'number' ? currentMetrics.totalTests.toLocaleString() : currentMetrics.totalTests}), coverage (${coverageText}), pass rates (${passRateText}), bugs by fix version, customer breakdown, and more. What would you like to know?`;
+            return `I can help with: production issues (${currentMetrics.openIssues}), automated tests (${currentMetrics.automatedTests.toLocaleString()}), total tests (${typeof currentMetrics.totalTests === 'number' ? currentMetrics.totalTests.toLocaleString() : currentMetrics.totalTests}), coverage (${coverageText}), pass rates (${passRateText}), bugs by fix version, customer breakdown, <span class="metric-highlight">release schedules</span>, and more. What would you like to know?`;
+        }
+
+        // Release Schedule Data for Chatbot
+        const releaseSchedule = [
+            {
+                name: "5.9.20 Release",
+                version: "5.9.20",
+                type: "current",
+                releaseDate: new Date("2025-11-26"),
+                status: "✅ General Release",
+                description: "Latest production release"
+            },
+            {
+                name: "5.9.21 Release", 
+                version: "5.9.21",
+                type: "next",
+                releaseDate: new Date("2026-01-13"),
+                status: "🚧 In Development",
+                phases: [
+                    {name: "Branch Created", date: new Date("2025-11-27"), completed: true},
+                    {name: "Dev Close", date: new Date("2026-01-07"), completed: false},
+                    {name: "General Release", date: new Date("2026-01-13"), completed: false}
+                ]
+            },
+            {
+                name: "5.9.22 Release",
+                version: "5.9.22",
+                type: "upcoming",
+                releaseDate: new Date("2026-01-29"),
+                status: "📋 Planning Phase",
+                phases: [
+                    {name: "Branch Creation", date: new Date("2026-01-14"), completed: false},
+                    {name: "Dev Close", date: new Date("2026-01-22"), completed: false},
+                    {name: "General Release", date: new Date("2026-01-29"), completed: false}
+                ]
+            },
+            {
+                name: "5.9.23 Release",
+                version: "5.9.23",
+                type: "upcoming",
+                releaseDate: new Date("2026-02-11"),
+                status: "📋 Planning Phase",
+                phases: [
+                    {name: "Branch Creation", date: new Date("2026-01-30"), completed: false},
+                    {name: "Dev Close", date: new Date("2026-02-05"), completed: false},
+                    {name: "General Release", date: new Date("2026-02-11"), completed: false}
+                ]
+            },
+            {
+                name: "5.9.24 Release",
+                version: "5.9.24",
+                type: "upcoming",
+                releaseDate: new Date("2026-02-25"),
+                status: "📋 Planning Phase",
+                phases: [
+                    {name: "Branch Creation", date: new Date("2026-02-12"), completed: false},
+                    {name: "Dev Close", date: new Date("2026-02-19"), completed: false},
+                    {name: "General Release", date: new Date("2026-02-25"), completed: false}
+                ]
+            },
+            {
+                name: "Feature Release 6.0.0",
+                version: "6.0.0",
+                type: "major",
+                releaseDate: new Date("2026-03-11"),
+                status: "🎯 Major Feature Release",
+                note: "PM sign off: 20-Feb | Dev close: 27-Feb",
+                phases: [
+                    {name: "PM Sign Off", date: new Date("2026-02-20"), completed: false},
+                    {name: "Dev Close", date: new Date("2026-02-27"), completed: false},
+                    {name: "General Release", date: new Date("2026-03-11"), completed: false}
+                ]
+            },
+            {
+                name: "Maintenance Release 6.0.1",
+                version: "6.0.1",
+                type: "maintenance",
+                releaseDate: new Date("2026-03-25"),
+                status: "🔧 Maintenance Release",
+                note: "Branch created from 6.0.0",
+                phases: [
+                    {name: "Branch Creation", date: new Date("2026-03-12"), completed: false},
+                    {name: "Dev Close", date: new Date("2026-03-19"), completed: false},
+                    {name: "General Release", date: new Date("2026-03-25"), completed: false}
+                ]
+            }
+        ];
+
+        // Release Query Handler
+        function handleReleaseQueries(query) {
+            const lowerQuery = query.toLowerCase();
+            const currentDate = new Date();
+            
+            // When is next release?
+            if (lowerQuery.includes('next release') || lowerQuery.includes('upcoming release')) {
+                const nextRelease = releaseSchedule.find(r => r.releaseDate > currentDate);
+                if (nextRelease) {
+                    const daysToRelease = Math.ceil((nextRelease.releaseDate - currentDate) / (1000 * 60 * 60 * 24));
+                    const dateStr = nextRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                    return `The next release is <span class="metric-highlight">${nextRelease.name}</span> scheduled for <span class="metric-highlight">${dateStr}</span> (in ${daysToRelease} days). Current status: ${nextRelease.status}.`;
+                }
+            }
+            
+            // Current release info
+            if (lowerQuery.includes('current release') || lowerQuery.includes('latest release')) {
+                const currentRelease = releaseSchedule.find(r => r.releaseDate <= currentDate) || releaseSchedule[0];
+                const dateStr = currentRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                return `The current release is <span class="metric-highlight">${currentRelease.name}</span> released on <span class="metric-highlight">${dateStr}</span>. Status: ${currentRelease.status}.`;
+            }
+            
+            // Specific version queries
+            const versionMatch = lowerQuery.match(/(\\d+\\.\\d+\\.\\d+)/); 
+            if (versionMatch) {
+                const version = versionMatch[1];
+                const release = releaseSchedule.find(r => r.version === version);
+                if (release) {
+                    const dateStr = release.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                    const isReleased = release.releaseDate <= currentDate;
+                    const timeText = isReleased ? `released on ${dateStr}` : `scheduled for ${dateStr}`;
+                    
+                    let phaseInfo = '';
+                    if (release.phases && !isReleased) {
+                        const nextPhase = release.phases.find(p => p.date > currentDate);
+                        if (nextPhase) {
+                            const phaseDate = nextPhase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                            phaseInfo = ` Next milestone: ${nextPhase.name} on ${phaseDate}.`;
+                        }
+                    }
+                    
+                    return `<span class="metric-highlight">${release.name}</span> is ${timeText}. Status: ${release.status}.${phaseInfo}`;
+                }
+            }
+            
+            // Release schedule overview
+            if (lowerQuery.includes('release schedule') || lowerQuery.includes('release calendar') || lowerQuery.includes('all releases')) {
+                const upcomingReleases = releaseSchedule.filter(r => r.releaseDate > currentDate).slice(0, 3);
+                const scheduleText = upcomingReleases.map(r => {
+                    const dateStr = r.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                    return `${r.name} (${dateStr})`;
+                }).join(', ');
+                
+                return `Upcoming releases in Q1 2026: <span class="metric-highlight">${scheduleText}</span>. Ask about specific versions for detailed information.`;
+            }
+            
+            // Feature release 6.0.0 specific info
+            if (lowerQuery.includes('6.0') || lowerQuery.includes('feature release') || lowerQuery.includes('major release')) {
+                const featureRelease = releaseSchedule.find(r => r.version === '6.0.0');
+                if (featureRelease) {
+                    const dateStr = featureRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                    return `<span class="metric-highlight">Feature Release 6.0.0</span> is the major Q1 2026 release scheduled for <span class="metric-highlight">${dateStr}</span>. ${featureRelease.note || ''} This will include all features committed after 5.9.20.`;
+                }
+            }
+            
+            // Branch creation dates
+            if (lowerQuery.includes('branch') && (lowerQuery.includes('when') || lowerQuery.includes('date'))) {
+                const nextBranch = releaseSchedule.find(r => {
+                    return r.phases && r.phases.some(p => p.name.includes('Branch') && p.date > currentDate);
+                });
+                if (nextBranch) {
+                    const branchPhase = nextBranch.phases.find(p => p.name.includes('Branch') && p.date > currentDate);
+                    const dateStr = branchPhase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                    return `Next branch creation is for <span class="metric-highlight">${nextBranch.name}</span> on <span class="metric-highlight">${dateStr}</span>.`;
+                }
+            }
+            
+            // Dev close dates
+            if (lowerQuery.includes('dev close') || lowerQuery.includes('development close')) {
+                const nextDevClose = releaseSchedule.find(r => {
+                    return r.phases && r.phases.some(p => p.name.includes('Dev Close') && p.date > currentDate);
+                });
+                if (nextDevClose) {
+                    const devPhase = nextDevClose.phases.find(p => p.name.includes('Dev Close') && p.date > currentDate);
+                    const dateStr = devPhase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                    return `Next development close is for <span class="metric-highlight">${nextDevClose.name}</span> on <span class="metric-highlight">${dateStr}</span>.`;
+                }
+            }
+            
+            return null; // No release-related query matched
+        }
+
+        // Release Query Handler
+        function handleReleaseQueries(query) {
+            const lowerQuery = query.toLowerCase();
+            const currentDate = new Date();
+            
+            // When is next release?
+            if (lowerQuery.includes('next release') || lowerQuery.includes('upcoming release')) {
+                const nextRelease = releaseSchedule.find(r => r.releaseDate > currentDate);
+                if (nextRelease) {
+                    const daysToRelease = Math.ceil((nextRelease.releaseDate - currentDate) / (1000 * 60 * 60 * 24));
+                    const dateStr = nextRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                    return `The next release is <span class="metric-highlight">${nextRelease.name}</span> scheduled for <span class="metric-highlight">${dateStr}</span> (in ${daysToRelease} days). Current status: ${nextRelease.status}.`;
+                }
+            }
+            
+            // Current release info
+            if (lowerQuery.includes('current release') || lowerQuery.includes('latest release')) {
+                const currentRelease = releaseSchedule.find(r => r.releaseDate <= currentDate) || releaseSchedule[0];
+                const dateStr = currentRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                return `The current release is <span class="metric-highlight">${currentRelease.name}</span> released on <span class="metric-highlight">${dateStr}</span>. Status: ${currentRelease.status}.`;
+            }
+            
+            // Specific version queries
+            const versionMatch = lowerQuery.match(/(\d+\.\d+\.\d+)/); 
+            if (versionMatch) {
+                const version = versionMatch[1];
+                const release = releaseSchedule.find(r => r.version === version);
+                if (release) {
+                    const dateStr = release.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                    const isReleased = release.releaseDate <= currentDate;
+                    const timeText = isReleased ? `released on ${dateStr}` : `scheduled for ${dateStr}`;
+                    
+                    let phaseInfo = '';
+                    if (release.phases && !isReleased) {
+                        const nextPhase = release.phases.find(p => p.date > currentDate);
+                        if (nextPhase) {
+                            const phaseDate = nextPhase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                            phaseInfo = ` Next milestone: ${nextPhase.name} on ${phaseDate}.`;
+                        }
+                    }
+                    
+                    return `<span class="metric-highlight">${release.name}</span> is ${timeText}. Status: ${release.status}.${phaseInfo}`;
+                }
+            }
+            
+            // Release schedule overview
+            if (lowerQuery.includes('release schedule') || lowerQuery.includes('release calendar') || lowerQuery.includes('all releases')) {
+                const upcomingReleases = releaseSchedule.filter(r => r.releaseDate > currentDate).slice(0, 3);
+                const scheduleText = upcomingReleases.map(r => {
+                    const dateStr = r.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                    return `${r.name} (${dateStr})`;
+                }).join(', ');
+                
+                return `Upcoming releases in Q1 2026: <span class="metric-highlight">${scheduleText}</span>. Ask about specific versions for detailed information.`;
+            }
+            
+            // Feature release 6.0.0 specific info
+            if (lowerQuery.includes('6.0') || lowerQuery.includes('feature release') || lowerQuery.includes('major release')) {
+                const featureRelease = releaseSchedule.find(r => r.version === '6.0.0');
+                if (featureRelease) {
+                    const dateStr = featureRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+                    return `<span class="metric-highlight">Feature Release 6.0.0</span> is the major Q1 2026 release scheduled for <span class="metric-highlight">${dateStr}</span>. ${featureRelease.note || ''} This will include all features committed after 5.9.20.`;
+                }
+            }
+            
+            // Branch creation dates
+            if (lowerQuery.includes('branch') && (lowerQuery.includes('when') || lowerQuery.includes('date'))) {
+                const nextBranch = releaseSchedule.find(r => {
+                    return r.phases && r.phases.some(p => p.name.includes('Branch') && p.date > currentDate);
+                });
+                if (nextBranch) {
+                    const branchPhase = nextBranch.phases.find(p => p.name.includes('Branch') && p.date > currentDate);
+                    const dateStr = branchPhase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                    return `Next branch creation is for <span class="metric-highlight">${nextBranch.name}</span> on <span class="metric-highlight">${dateStr}</span>.`;
+                }
+            }
+            
+            // Dev close dates
+            if (lowerQuery.includes('dev close') || lowerQuery.includes('development close')) {
+                const nextDevClose = releaseSchedule.find(r => {
+                    return r.phases && r.phases.some(p => p.name.includes('Dev Close') && p.date > currentDate);
+                });
+                if (nextDevClose) {
+                    const devPhase = nextDevClose.phases.find(p => p.name.includes('Dev Close') && p.date > currentDate);
+                    const dateStr = devPhase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                    return `Next development close is for <span class="metric-highlight">${nextDevClose.name}</span> on <span class="metric-highlight">${dateStr}</span>.`;
+                }
+            }
+            
+            return null; // No release-related query matched
+        }
+
+        // Release Calendar Management
+        function updateReleaseCalendar() {
+            // Use the first 4 releases for display
+            const releases = releaseSchedule.slice(0, 4);
+
+            const currentDate = new Date();
+            
+            // Determine current release state dynamically
+            let currentRelease = releases.find(r => r.releaseDate <= currentDate) || releases[0];
+            let nextReleases = releases.filter(r => r.releaseDate > currentDate).slice(0, 2);
+            
+            // If no upcoming releases, show next planned ones
+            if (nextReleases.length === 0) {
+                nextReleases = releases.slice(1, 3);
+            }
+
+            const calendarHtml = `
+                <div class="release-item current">
+                    <div class="release-badge">CURRENT</div>
+                    <div class="release-info">
+                        <div class="release-name">${currentRelease.name}</div>
+                        <div class="release-date">Released: ${currentRelease.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'})}</div>
+                        <div class="release-status">${currentRelease.status}</div>
+                    </div>
+                </div>
+                ${nextReleases.map((release, index) => {
+                    const badge = index === 0 ? 'NEXT' : (release.type === 'major' ? 'MAJOR' : 'UPCOMING');
+                    const className = index === 0 ? 'next' : (release.type === 'major' ? 'major' : 'upcoming');
+                    
+                    const phasesHtml = release.phases ? release.phases.map(phase => {
+                        const isCompleted = phase.date <= currentDate;
+                        const phaseClass = isCompleted ? 'completed' : 'pending';
+                        const dateStr = phase.date.toLocaleDateString('en-GB', {day: '2-digit', month: 'short'});
+                        return `<span class="phase ${phaseClass}">${phase.name} (${dateStr})</span>`;
+                    }).join('') : '';
+                    
+                    const noteHtml = release.note ? `<div class="release-note">${release.note}</div>` : '';
+                    
+                    return `
+                        <div class="release-item ${className}">
+                            <div class="release-badge">${badge}</div>
+                            <div class="release-info">
+                                <div class="release-name">${release.name}</div>
+                                <div class="release-date">Target: ${release.releaseDate.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'})}</div>
+                                <div class="release-status">${release.status}</div>
+                                ${phasesHtml ? `<div class="release-phases">${phasesHtml}</div>` : ''}
+                                ${noteHtml}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+
+            const timelineElement = document.querySelector('.release-timeline');
+            if (timelineElement) {
+                timelineElement.innerHTML = calendarHtml;
+            }
+
+            // Update the calendar title with relative time info
+            const titleElement = document.querySelector('.calendar-title');
+            if (titleElement) {
+                const nextRelease = nextReleases[0];
+                if (nextRelease) {
+                    const daysToNext = Math.ceil((nextRelease.releaseDate - currentDate) / (1000 * 60 * 60 * 24));
+                    titleElement.innerHTML = `📅 Release Calendar - Q1 2026 <small style="font-size:0.7em; color:#666;">(Next release in ${daysToNext} days)</small>`;
+                }
+            }
         }
 
         // Auto-refresh for SharePoint
@@ -2130,6 +2682,7 @@
                     updateFallbackData();
                 }
                 renderSharePointDashboard();
+                updateReleaseCalendar();
                 lastUpdateTime = new Date();
                 console.log('📊 Dashboard refreshed', success ? '(live data + fallback updated)' : '(using cached data)');
             } catch (error) {
