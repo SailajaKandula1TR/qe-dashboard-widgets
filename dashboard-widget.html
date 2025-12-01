@@ -409,7 +409,7 @@
                             <div class="metric-trend">↗ Growing</div>
                         </div>
                         
-                        <div class="metric-card">
+                        <div class="metric-card" style="background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);">
                             <div class="metric-icon">🧪</div>
                             <div class="metric-title">Total Tests</div>
                             <div class="metric-value" id="totalTestsValue">Loading...</div>
@@ -449,7 +449,7 @@
                         </div>
                         <div class="summary-item">
                             <div class="summary-label">Quality Score</div>
-                            <div class="summary-value" style="color: #26de81;" id="qualityValue">85%</div>
+                            <div class="summary-value" style="color: #26de81;" id="qualityValue">Calculating...</div>
                         </div>
                     </div>
 
@@ -499,6 +499,12 @@
             dashboardUrl: 'http://10.188.16.87:5001',
             refreshInterval: 300000, // 5 minutes
             timeout: 5000,
+            // Report Portal configuration
+            reportPortal: {
+                url: 'https://lab1reportportal.highq.com/api/v1',
+                project: 'release',
+                token: 'qe-page-html_SLHSRYwnTQ6hAMQexjA6a_J5zI7zSzNXxC8DZRJIZPfDHPjVjlvTtLdhQ-VqFzmc'
+            },
             fallbackData: {
                 openIssues: 27,
                 totalIssues: 1065,
@@ -508,7 +514,7 @@
                 passRate: "Not defined",
                 testsPassed: "Not defined",
                 testsFailed: "Not defined",
-                avgExecutionTime: 42,
+                avgExecutionTime: "Not defined",
                 // Additional production bug metrics
                 byFixVersion: [
                     { fixVersion: "v2.1.0", count: 15 },
@@ -569,6 +575,11 @@
             
             // Always render the dashboard with available data
             renderSharePointDashboard();
+            
+            // Calculate and display initial quality score
+            const initialQualityScore = calculateQualityScore(currentMetrics);
+            document.getElementById('qualityValue').textContent = `${initialQualityScore}%`;
+            
             const automatedCount = currentMetrics.automatedTests;
             const openIssues = currentMetrics.openIssues;
             addChatMessage('system', `✅ Dashboard ready! Current data: ${openIssues} open production issues, ${automatedCount.toLocaleString()} automated tests.`);
@@ -766,6 +777,120 @@
             } catch (error) {
                 console.log('ℹ️ Repositories API blocked:', error.message);
             }
+
+            // Fetch Report Portal data for pass rate and execution time
+            try {
+                await fetchReportPortalData();
+            } catch (error) {
+                console.log('ℹ️ Report Portal API blocked:', error.message);
+            }
+        }
+
+        async function fetchReportPortalData() {
+            try {
+                // Fetch latest launches with 'release' in the name
+                const response = await fetch(`${CONFIG.reportPortal.url}/${CONFIG.reportPortal.project}/launch?page.page=0&page.size=50&page.sort=startTime,desc`, {
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.reportPortal.token}`,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.content && Array.isArray(data.content)) {
+                        // Filter launches that contain 'release' in the name (case-insensitive)
+                        const releaseLaunches = data.content
+                            .filter(launch => 
+                                launch.name && 
+                                launch.name.toLowerCase().includes('release') &&
+                                launch.status === 'FINISHED' // Only include finished launches
+                            )
+                            .slice(0, 10); // Get latest 10
+                        
+                        if (releaseLaunches.length > 0) {
+                            console.log(`📊 Received ${releaseLaunches.length} release launches from Report Portal`);
+                            
+                            // Calculate pass rate from launches
+                            const passRateData = calculatePassRate(releaseLaunches);
+                            currentMetrics.passRate = passRateData.passRate;
+                            currentMetrics.testsPassed = passRateData.passed;
+                            currentMetrics.testsFailed = passRateData.failed;
+                            
+                            // Calculate average execution time
+                            const avgExecution = calculateAverageExecutionTime(releaseLaunches);
+                            currentMetrics.avgExecutionTime = avgExecution;
+                            
+                            console.log('✅ Updated Report Portal data:', {
+                                passRate: currentMetrics.passRate,
+                                avgExecutionTime: currentMetrics.avgExecutionTime,
+                                testsPassed: currentMetrics.testsPassed,
+                                testsFailed: currentMetrics.testsFailed
+                            });
+                            
+                            // Force UI update
+                            renderSharePointDashboard();
+                        } else {
+                            console.log('ℹ️ No finished release launches found in Report Portal');
+                        }
+                    }
+                } else {
+                    console.log('ℹ️ Report Portal API response not ok:', response.status);
+                }
+            } catch (error) {
+                console.log('ℹ️ Report Portal API call failed:', error.message);
+            }
+        }
+
+        function calculatePassRate(launches) {
+            let totalPassed = 0;
+            let totalFailed = 0;
+            let totalSkipped = 0;
+            
+            launches.forEach(launch => {
+                if (launch.statistics && launch.statistics.executions) {
+                    const stats = launch.statistics.executions;
+                    totalPassed += (stats.passed || 0);
+                    totalFailed += (stats.failed || 0);
+                    totalSkipped += (stats.skipped || 0);
+                }
+            });
+            
+            const totalTests = totalPassed + totalFailed;
+            const passRate = totalTests > 0 ? Math.round((totalPassed / totalTests) * 100 * 10) / 10 : 0;
+            
+            return {
+                passRate: passRate,
+                passed: totalPassed,
+                failed: totalFailed,
+                skipped: totalSkipped
+            };
+        }
+
+        function calculateAverageExecutionTime(launches) {
+            let totalDuration = 0;
+            let validLaunches = 0;
+            
+            launches.forEach(launch => {
+                if (launch.startTime && launch.endTime) {
+                    const startTime = new Date(launch.startTime);
+                    const endTime = new Date(launch.endTime);
+                    const duration = (endTime - startTime) / (1000 * 60); // Convert to minutes
+                    
+                    if (duration > 0 && duration < 1440) { // Reasonable duration (less than 24 hours)
+                        totalDuration += duration;
+                        validLaunches++;
+                    }
+                }
+            });
+            
+            if (validLaunches > 0) {
+                const avgMinutes = Math.round(totalDuration / validLaunches);
+                return avgMinutes;
+            }
+            
+            return "Not defined";
         }
 
         function renderSharePointDashboard() {
@@ -786,10 +911,18 @@
             const coverageValue = typeof currentMetrics.coverage === 'number' ? 
                 `${currentMetrics.coverage}%` : currentMetrics.coverage;
             document.getElementById('coverageValue').textContent = coverageValue;
-            document.getElementById('passRateValue').textContent = currentMetrics.passRate;
+            
+            // Handle pass rate display
+            const passRateValue = typeof currentMetrics.passRate === 'number' ? 
+                `${currentMetrics.passRate}%` : currentMetrics.passRate;
+            document.getElementById('passRateValue').textContent = passRateValue;
             document.getElementById('passedValue').textContent = currentMetrics.testsPassed;
             document.getElementById('failedValue').textContent = currentMetrics.testsFailed;
-            document.getElementById('executionValue').textContent = `${currentMetrics.avgExecutionTime}min`;
+            
+            // Handle execution time display
+            const executionValue = typeof currentMetrics.avgExecutionTime === 'number' ? 
+                `${currentMetrics.avgExecutionTime}min` : currentMetrics.avgExecutionTime;
+            document.getElementById('executionValue').textContent = executionValue;
             
             // Calculate and update quality score
             const qualityScore = calculateQualityScore(currentMetrics);
@@ -1109,7 +1242,20 @@
 
             if (message.includes('quality') || message.includes('score')) {
                 const qualityScore = calculateQualityScore(currentMetrics);
-                return `Quality Score is <span class="metric-highlight">${qualityScore}%</span>. This is calculated from pass rate, coverage, and open issues metrics.`;
+                
+                // Check if user is asking about calculation logic
+                if (message.includes('how') || message.includes('calculate') || message.includes('calculation') || message.includes('formula')) {
+                    const passRatePoints = typeof currentMetrics.passRate === 'number' ? 
+                        (currentMetrics.passRate > 95 ? 25 : currentMetrics.passRate > 85 ? 20 : 10) : 10;
+                    const coveragePoints = typeof currentMetrics.coverage === 'number' ? 
+                        (currentMetrics.coverage > 90 ? 25 : currentMetrics.coverage > 80 ? 20 : 10) : 10;
+                    const issuesPoints = currentMetrics.openIssues < 10 ? 25 : currentMetrics.openIssues < 15 ? 20 : 10;
+                    const basePoints = 25;
+                    
+                    return `🧮 **Quality Score Calculation (100-point system)**: Pass Rate (${passRatePoints}/25 pts): >95%=25, >85%=20, else=10. Coverage (${coveragePoints}/25 pts): >90%=25, >80%=20, else=10. Open Issues (${issuesPoints}/25 pts): <10=25, <15=20, else=10. Base Score: ${basePoints}/25 pts. <span class="metric-highlight">Total: ${qualityScore}%</span> (${passRatePoints}+${coveragePoints}+${issuesPoints}+${basePoints}).`;
+                }
+                
+                return `Quality Score is <span class="metric-highlight">${qualityScore}%</span>. This is calculated from pass rate, coverage, and open issues metrics. Ask "how is quality score calculated" for detailed breakdown.`;
             }
 
             // Enhanced help message
