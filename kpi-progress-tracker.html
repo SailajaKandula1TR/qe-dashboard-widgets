@@ -158,24 +158,45 @@
             display: flex;
             align-items: center;
             pointer-events: none;
+            z-index: 10;
         }
 
         .progress-marker {
             position: absolute;
-            width: 3px;
+            width: 2px;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 1px;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
         }
 
         .marker-label {
             position: absolute;
-            top: -25px;
-            font-size: 0.7em;
-            color: #666;
+            top: -30px;
+            font-size: 0.65em;
+            color: #333;
             white-space: nowrap;
             transform: translateX(-50%);
-            font-weight: 500;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .marker-value {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 0.6em;
+            color: white;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 1px 3px;
+            border-radius: 2px;
+            white-space: nowrap;
         }
 
         .kpi-details {
@@ -218,6 +239,11 @@
         .status-behind {
             background: #f8d7da;
             color: #721c24;
+        }
+
+        .status-goal {
+            background: #d1ecf1;
+            color: #0c5460;
         }
 
         .additional-info {
@@ -267,29 +293,35 @@
 
         <div class="content">
             <div class="quarter-tabs">
-                <button class="quarter-tab active" data-quarter="q1">Q1 2025</button>
-                <button class="quarter-tab" data-quarter="q2">Q2 2025</button>
-                <button class="quarter-tab" data-quarter="q3">Q3 2025</button>
-                <button class="quarter-tab" data-quarter="q4">Q4 2025</button>
-            </div>
-
-            <!-- Q1 2025 KPIs -->
-            <div id="q1" class="kpi-grid active">
-                <!-- KPIs will be dynamically generated here -->
-            </div>
-
-            <!-- Q2 2025 KPIs -->
-            <div id="q2" class="kpi-grid">
-                <!-- KPIs will be dynamically generated here -->
-            </div>
-
-            <!-- Q3 2025 KPIs -->
-            <div id="q3" class="kpi-grid">
-                <!-- KPIs will be dynamically generated here -->
+                <button class="quarter-tab active" data-quarter="q4_2025">Q4 2025 (Current)</button>
+                <button class="quarter-tab" data-quarter="q1_2026">Q1 2026 (Upcoming)</button>
+                <button class="quarter-tab" data-quarter="q2_2026">Q2 2026 (Future)</button>
+                <button class="quarter-tab" data-quarter="q3_2026">Q3 2026 (Future)</button>
+                <button class="quarter-tab" data-quarter="q4_2026">Q4 2026 (Future)</button>
             </div>
 
             <!-- Q4 2025 KPIs -->
-            <div id="q4" class="kpi-grid">
+            <div id="q4_2025" class="kpi-grid active">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q1 2026 KPIs -->
+            <div id="q1_2026" class="kpi-grid">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q2 2026 KPIs -->
+            <div id="q2_2026" class="kpi-grid">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q3 2026 KPIs -->
+            <div id="q3_2026" class="kpi-grid">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q4 2026 KPIs -->
+            <div id="q4_2026" class="kpi-grid">
                 <!-- KPIs will be dynamically generated here -->
             </div>
 
@@ -306,8 +338,10 @@
         // Update these values easily without touching any other code!
         
         const KPI_DATA = {
-            q1_2025: {
-                title: "Q1 2025",
+            q4_2025: {
+                title: "Q4 2025",
+                startDate: new Date("2025-10-01"),
+                endDate: new Date("2025-12-31"),
                 kpis: [
                     {
                         name: "Unit Coverage - Collab",
@@ -321,38 +355,38 @@
                     {
                         name: "Unit Coverage - MS",
                         icon: "🔬",
-                        current: 49,
-                        target: 85,
+                        current: 80,
+                        target: 80,
                         unit: "%",
-                        milestones: [70, 80],
-                        additionalInfo: "Next milestone: 70% by Q2"
+                        milestones: [60, 70],
+                        additionalInfo: "Next milestone: 85% by Q1 end"
                     },
                     {
                         name: "Test Coverage",
                         icon: "🧪",
-                        current: 30,
-                        target: 85,
+                        current: 60,
+                        target: 60,
                         unit: "%",
-                        milestones: [50, 65],
-                        additionalInfo: "Tool: ADO MCP - Next milestone: >50%"
+                        milestones: [45, 50],
+                        additionalInfo: "Tool: ADO MCP - Next milestone: >70%"
                     },
                     {
                         name: "IT/Contract Test Coverage",
                         icon: "🤝",
                         current: 15,
-                        target: 90,
+                        target: 40,
                         unit: "%",
-                        milestones: [60],
+                        milestones: [30],
                         additionalInfo: ""
                     },
                     {
                         name: "API Test Automation",
                         icon: "🔗",
-                        current: 8,
-                        target: 80,
+                        current: 3.8,
+                        target: 10,
                         unit: "%",
-                        milestones: [28],
-                        additionalInfo: "Lesheet APIs on priority"
+                        milestones: [5, 10],
+                        additionalInfo: "Isheet APIs on priority"
                     },
                     {
                         name: "UI Automation",
@@ -366,8 +400,8 @@
                     {
                         name: "Automation Pass Rate",
                         icon: "✅",
-                        current: 60,
-                        target: 95,
+                        current: 70,
+                        target: 85,
                         unit: "%",
                         milestones: [80],
                         additionalInfo: "90% RVT, 90% Smoke. Regression(n-1) 70%"
@@ -375,8 +409,8 @@
                     {
                         name: "Defect Backlog",
                         icon: "🐛",
-                        current: 48,
-                        target: 5,
+                        current: 35,
+                        target: 10,
                         unit: "",
                         milestones: [28, 20, 10],
                         additionalInfo: "Lower is better - Focus on reducing backlog",
@@ -384,38 +418,106 @@
                     }
                 ]
             },
-            q2_2025: {
-                title: "Q2 2025",
+            q1_2026: {
+                title: "Q1 2026",
+                startDate: new Date("2026-01-01"),
+                endDate: new Date("2026-03-31"),
                 kpis: [
                     {
                         name: "Unit Coverage - Collab",
                         icon: "🧪",
-                        current: 18,
+                        current: 15,
                         target: 22,
                         unit: "%",
-                        milestones: [20],
-                        additionalInfo: "Improved from Q1"
+                        milestones: [18, 20],
+                        additionalInfo: "Goal for Q1 2026"
                     },
                     {
                         name: "Unit Coverage - MS",
                         icon: "🔬",
-                        current: 72,
+                        current: 82,
                         target: 85,
                         unit: "%",
-                        milestones: [75, 80],
-                        additionalInfo: "Good progress from Q1"
+                        milestones: [84, 85],
+                        additionalInfo: "Goal for Q1 2026"
+                    },
+                    {
+                        name: "Test Coverage",
+                        icon: "🧪",
+                        current: 65,
+                        target: 70,
+                        unit: "%",
+                        milestones: [68, 70],
+                        additionalInfo: "Tool: ADO MCP - Q1 target"
+                    },
+                    {
+                        name: "IT/Contract Test Coverage",
+                        icon: "🤝",
+                        current: 25,
+                        target: 50,
+                        unit: "%",
+                        milestones: [35, 45],
+                        additionalInfo: "Q1 goal"
+                    },
+                    {
+                        name: "API Test Automation",
+                        icon: "🔗",
+                        current: 8,
+                        target: 20,
+                        unit: "%",
+                        milestones: [12, 16],
+                        additionalInfo: "Isheet APIs focus Q1"
+                    },
+                    {
+                        name: "UI Automation",
+                        icon: "🖥️",
+                        current: 75,
+                        target: 85,
+                        unit: "%",
+                        milestones: [80, 85],
+                        additionalInfo: "Q1 automation target"
+                    },
+                    {
+                        name: "Automation Pass Rate",
+                        icon: "✅",
+                        current: 75,
+                        target: 90,
+                        unit: "%",
+                        milestones: [85, 88],
+                        additionalInfo: "Q1 pass rate goal"
+                    },
+                    {
+                        name: "Defect Backlog",
+                        icon: "🐛",
+                        current: 35,
+                        target: 8,
+                        unit: "",
+                        milestones: [20, 15, 10],
+                        additionalInfo: "Lower is better - Q1 target",
+                        isReverse: true
                     }
-                    // Add more KPIs for Q2 as needed
                 ]
             },
-            q3_2025: {
-                title: "Q3 2025",
+            q2_2026: {
+                title: "Q2 2026",
+                startDate: new Date("2026-04-01"),
+                endDate: new Date("2026-06-30"),
+                kpis: [
+                    // Add Q2 data as it becomes available
+                ]
+            },
+            q3_2026: {
+                title: "Q3 2026",
+                startDate: new Date("2026-07-01"),
+                endDate: new Date("2026-09-30"),
                 kpis: [
                     // Add Q3 data as it becomes available
                 ]
             },
-            q4_2025: {
-                title: "Q4 2025",
+            q4_2026: {
+                title: "Q4 2026",
+                startDate: new Date("2026-10-01"),
+                endDate: new Date("2026-12-31"),
                 kpis: [
                     // Add Q4 data as it becomes available
                 ]
@@ -438,11 +540,21 @@
             }
         }
 
+        // Function to determine if quarter has started
+        function isQuarterActive(quarterData) {
+            const currentDate = new Date();
+            return currentDate >= quarterData.startDate;
+        }
+
         // Function to determine status
-        function getKPIStatus(current, target, isReverse = false) {
+        function getKPIStatus(current, target, isReverse = false, quarterData = null) {
+            // If quarter hasn't started yet, show as Goal
+            if (quarterData && !isQuarterActive(quarterData)) {
+                return 'goal';
+            }
+            
             const progress = calculateProgress(current, target, isReverse);
             if (progress >= 90) return 'on-track';
-            if (progress >= 70) return 'at-risk';
             return 'behind';
         }
 
@@ -450,7 +562,7 @@
         function getProgressBarClass(status) {
             switch(status) {
                 case 'on-track': return 'progress-excellent';
-                case 'at-risk': return 'progress-good';
+                case 'goal': return 'progress-good';
                 default: return 'progress-needs-improvement';
             }
         }
@@ -470,28 +582,46 @@
             }
 
             const kpisHTML = quarterData.kpis.map(kpi => {
-                const progress = calculateProgress(kpi.current, kpi.target, kpi.isReverse);
-                const status = getKPIStatus(kpi.current, kpi.target, kpi.isReverse);
+                // Calculate consistent scale for both progress bar and milestones
+                const maxScale = kpi.isReverse ? 
+                    Math.max(kpi.current * 2, 50) : 
+                    Math.max(kpi.target, kpi.current * 1.2, 100);
+                
+                // Calculate progress as percentage of the maxScale (not target)
+                const progressPercentage = kpi.isReverse ? 
+                    Math.max(0, ((maxScale - kpi.current) / (maxScale - kpi.target)) * 100) :
+                    Math.min(100, (kpi.current / maxScale) * 100);
+                
+                const status = getKPIStatus(kpi.current, kpi.target, kpi.isReverse, quarterData);
                 const progressBarClass = getProgressBarClass(status);
                 
                 const statusLabels = {
                     'on-track': 'On Track',
-                    'at-risk': 'At Risk',
-                    'behind': 'Behind Target'
+                    'behind': 'Behind Target',
+                    'goal': 'Goal'
                 };
 
                 const currentDisplay = kpi.isReverse && kpi.current >= 48 ? `≥${kpi.current}` : kpi.current;
                 const targetDisplay = kpi.isReverse ? `<${kpi.target}` : 
                     (kpi.target >= 85 && !kpi.isReverse ? `>${kpi.target}` : kpi.target);
 
-                // Generate milestone markers
+                // Generate milestone markers using the same maxScale
                 const milestoneMarkersHTML = kpi.milestones.map(milestone => {
-                    const position = kpi.isReverse ? 
-                        Math.max(5, (1 - (milestone / Math.max(kpi.current * 1.5, 100))) * 100) :
-                        Math.min(95, (milestone / kpi.target) * 100);
+                    let position;
+                    if (kpi.isReverse) {
+                        position = Math.max(5, Math.min(95, ((maxScale - milestone) / (maxScale - kpi.target)) * 100));
+                    } else {
+                        // Use the same maxScale as progress bar
+                        position = Math.max(5, Math.min(95, (milestone / maxScale) * 100));
+                    }
+                    
+                    const displayValue = kpi.isReverse ? milestone : 
+                        (milestone >= 50 && !kpi.isReverse ? `${milestone}` : milestone);
+                    
                     return `
                         <div class="progress-marker" style="left: ${position}%;">
-                            <div class="marker-label">${kpi.isReverse ? milestone : (milestone >= 50 ? `>${milestone}` : milestone)}${kpi.unit}</div>
+                            <div class="marker-label">${displayValue}${kpi.unit}</div>
+                            <div class="marker-value">${displayValue}${kpi.unit}</div>
                         </div>
                     `;
                 }).join('');
@@ -503,7 +633,7 @@
                             ${kpi.name}
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar ${progressBarClass}" style="width: ${Math.max(5, progress)}%;">
+                            <div class="progress-bar ${progressBarClass}" style="width: ${Math.max(5, progressPercentage)}%;">
                                 <span class="progress-text">${currentDisplay}${kpi.unit}</span>
                             </div>
                             <div class="progress-markers">
@@ -526,10 +656,11 @@
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', function() {
             // Render all quarters
-            renderQuarterKPIs(KPI_DATA.q1_2025, 'q1');
-            renderQuarterKPIs(KPI_DATA.q2_2025, 'q2');
-            renderQuarterKPIs(KPI_DATA.q3_2025, 'q3');
-            renderQuarterKPIs(KPI_DATA.q4_2025, 'q4');
+            renderQuarterKPIs(KPI_DATA.q4_2025, 'q4_2025');
+            renderQuarterKPIs(KPI_DATA.q1_2026, 'q1_2026');
+            renderQuarterKPIs(KPI_DATA.q2_2026, 'q2_2026');
+            renderQuarterKPIs(KPI_DATA.q3_2026, 'q3_2026');
+            renderQuarterKPIs(KPI_DATA.q4_2026, 'q4_2026');
 
             // Quarter tab switching
             document.querySelectorAll('.quarter-tab').forEach(tab => {
