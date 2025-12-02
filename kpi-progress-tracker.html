@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QE KPI Progress Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .quarter-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .quarter-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .quarter-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .quarter-tab:hover {
+            background: #e9ecef;
+        }
+
+        .quarter-tab.active:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+
+        .kpi-grid {
+            display: none;
+        }
+
+        .kpi-grid.active {
+            display: block;
+        }
+
+        .kpi-section {
+            margin-bottom: 35px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .kpi-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .kpi-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .progress-bar-container {
+            position: relative;
+            background: #e9ecef;
+            height: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 20px;
+            position: relative;
+            transition: all 0.8s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .progress-excellent {
+            background: linear-gradient(90deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .progress-good {
+            background: linear-gradient(90deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .progress-needs-improvement {
+            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .progress-text {
+            color: white;
+            font-weight: 600;
+            padding: 0 15px;
+            font-size: 0.9em;
+        }
+
+        .progress-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .progress-marker {
+            position: absolute;
+            width: 3px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+        }
+
+        .marker-label {
+            position: absolute;
+            top: -25px;
+            font-size: 0.7em;
+            color: #666;
+            white-space: nowrap;
+            transform: translateX(-50%);
+            font-weight: 500;
+        }
+
+        .kpi-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .current-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .target-info {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-on-track {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-at-risk {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-behind {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .additional-info {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #666;
+            font-style: italic;
+        }
+
+        .refresh-info {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 30px;
+            padding: 15px;
+            background: #f1f3f4;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .quarter-tabs {
+                flex-direction: column;
+            }
+            
+            .kpi-details {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 QE KPI Progress Tracker</h1>
+            <p>Quality Engineering Performance Against Quarterly Targets</p>
+        </div>
+
+        <div class="content">
+            <div class="quarter-tabs">
+                <button class="quarter-tab active" data-quarter="q1">Q1 2025</button>
+                <button class="quarter-tab" data-quarter="q2">Q2 2025</button>
+                <button class="quarter-tab" data-quarter="q3">Q3 2025</button>
+                <button class="quarter-tab" data-quarter="q4">Q4 2025</button>
+            </div>
+
+            <!-- Q1 2025 KPIs -->
+            <div id="q1" class="kpi-grid active">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q2 2025 KPIs -->
+            <div id="q2" class="kpi-grid">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q3 2025 KPIs -->
+            <div id="q3" class="kpi-grid">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <!-- Q4 2025 KPIs -->
+            <div id="q4" class="kpi-grid">
+                <!-- KPIs will be dynamically generated here -->
+            </div>
+
+            <div class="refresh-info">
+                📊 KPI Progress Tracker | 🔄 Updates based on quarterly assessments | 🌐 SharePoint Ready
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // 📊 KPI DATA CONFIGURATION
+        // ========================================
+        // Update these values easily without touching any other code!
+        
+        const KPI_DATA = {
+            q1_2025: {
+                title: "Q1 2025",
+                kpis: [
+                    {
+                        name: "Unit Coverage - Collab",
+                        icon: "🧪",
+                        current: 13,
+                        target: 22,
+                        unit: "%",
+                        milestones: [14],
+                        additionalInfo: "Next milestone: 14% by Q1 end"
+                    },
+                    {
+                        name: "Unit Coverage - MS",
+                        icon: "🔬",
+                        current: 49,
+                        target: 85,
+                        unit: "%",
+                        milestones: [70, 80],
+                        additionalInfo: "Next milestone: 70% by Q2"
+                    },
+                    {
+                        name: "Test Coverage",
+                        icon: "🧪",
+                        current: 30,
+                        target: 85,
+                        unit: "%",
+                        milestones: [50, 65],
+                        additionalInfo: "Tool: ADO MCP - Next milestone: >50%"
+                    },
+                    {
+                        name: "IT/Contract Test Coverage",
+                        icon: "🤝",
+                        current: 15,
+                        target: 90,
+                        unit: "%",
+                        milestones: [60],
+                        additionalInfo: ""
+                    },
+                    {
+                        name: "API Test Automation",
+                        icon: "🔗",
+                        current: 8,
+                        target: 80,
+                        unit: "%",
+                        milestones: [28],
+                        additionalInfo: "Lesheet APIs on priority"
+                    },
+                    {
+                        name: "UI Automation",
+                        icon: "🖥️",
+                        current: 70,
+                        target: 85,
+                        unit: "%",
+                        milestones: [72],
+                        additionalInfo: "81% RVT, 76% Smoke. Regression(n-1) 60%. Core functionalities 50%"
+                    },
+                    {
+                        name: "Automation Pass Rate",
+                        icon: "✅",
+                        current: 60,
+                        target: 95,
+                        unit: "%",
+                        milestones: [80],
+                        additionalInfo: "90% RVT, 90% Smoke. Regression(n-1) 70%"
+                    },
+                    {
+                        name: "Defect Backlog",
+                        icon: "🐛",
+                        current: 48,
+                        target: 5,
+                        unit: "",
+                        milestones: [28, 20, 10],
+                        additionalInfo: "Lower is better - Focus on reducing backlog",
+                        isReverse: true // Lower values are better
+                    }
+                ]
+            },
+            q2_2025: {
+                title: "Q2 2025",
+                kpis: [
+                    {
+                        name: "Unit Coverage - Collab",
+                        icon: "🧪",
+                        current: 18,
+                        target: 22,
+                        unit: "%",
+                        milestones: [20],
+                        additionalInfo: "Improved from Q1"
+                    },
+                    {
+                        name: "Unit Coverage - MS",
+                        icon: "🔬",
+                        current: 72,
+                        target: 85,
+                        unit: "%",
+                        milestones: [75, 80],
+                        additionalInfo: "Good progress from Q1"
+                    }
+                    // Add more KPIs for Q2 as needed
+                ]
+            },
+            q3_2025: {
+                title: "Q3 2025",
+                kpis: [
+                    // Add Q3 data as it becomes available
+                ]
+            },
+            q4_2025: {
+                title: "Q4 2025",
+                kpis: [
+                    // Add Q4 data as it becomes available
+                ]
+            }
+        };
+
+        // ========================================
+        // 🎨 STYLING AND LOGIC (DON'T EDIT BELOW)
+        // ========================================
+
+        // Function to calculate progress percentage
+        function calculateProgress(current, target, isReverse = false) {
+            if (isReverse) {
+                // For metrics where lower is better (like defect backlog)
+                if (current <= target) return 100;
+                const maxValue = Math.max(current * 1.5, 100); // Dynamic max for reverse metrics
+                return Math.max(0, ((maxValue - current) / (maxValue - target)) * 100);
+            } else {
+                return Math.min(100, (current / target) * 100);
+            }
+        }
+
+        // Function to determine status
+        function getKPIStatus(current, target, isReverse = false) {
+            const progress = calculateProgress(current, target, isReverse);
+            if (progress >= 90) return 'on-track';
+            if (progress >= 70) return 'at-risk';
+            return 'behind';
+        }
+
+        // Function to get progress bar class
+        function getProgressBarClass(status) {
+            switch(status) {
+                case 'on-track': return 'progress-excellent';
+                case 'at-risk': return 'progress-good';
+                default: return 'progress-needs-improvement';
+            }
+        }
+
+        // Function to render KPIs for a quarter
+        function renderQuarterKPIs(quarterData, containerId) {
+            const container = document.getElementById(containerId);
+            
+            if (!quarterData.kpis || quarterData.kpis.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h3>${quarterData.title} KPI Data</h3>
+                        <p>Coming soon - Data will be populated as we progress through the year</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const kpisHTML = quarterData.kpis.map(kpi => {
+                const progress = calculateProgress(kpi.current, kpi.target, kpi.isReverse);
+                const status = getKPIStatus(kpi.current, kpi.target, kpi.isReverse);
+                const progressBarClass = getProgressBarClass(status);
+                
+                const statusLabels = {
+                    'on-track': 'On Track',
+                    'at-risk': 'At Risk',
+                    'behind': 'Behind Target'
+                };
+
+                const currentDisplay = kpi.isReverse && kpi.current >= 48 ? `≥${kpi.current}` : kpi.current;
+                const targetDisplay = kpi.isReverse ? `<${kpi.target}` : 
+                    (kpi.target >= 85 && !kpi.isReverse ? `>${kpi.target}` : kpi.target);
+
+                // Generate milestone markers
+                const milestoneMarkersHTML = kpi.milestones.map(milestone => {
+                    const position = kpi.isReverse ? 
+                        Math.max(5, (1 - (milestone / Math.max(kpi.current * 1.5, 100))) * 100) :
+                        Math.min(95, (milestone / kpi.target) * 100);
+                    return `
+                        <div class="progress-marker" style="left: ${position}%;">
+                            <div class="marker-label">${kpi.isReverse ? milestone : (milestone >= 50 ? `>${milestone}` : milestone)}${kpi.unit}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="kpi-section">
+                        <div class="kpi-title">
+                            <span class="kpi-icon">${kpi.icon}</span>
+                            ${kpi.name}
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar ${progressBarClass}" style="width: ${Math.max(5, progress)}%;">
+                                <span class="progress-text">${currentDisplay}${kpi.unit}</span>
+                            </div>
+                            <div class="progress-markers">
+                                ${milestoneMarkersHTML}
+                            </div>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="current-value">Current: ${currentDisplay}${kpi.unit}</span>
+                            <span class="status-badge status-${status}">${statusLabels[status]}</span>
+                            <span class="target-info">Target: ${targetDisplay}${kpi.unit}</span>
+                        </div>
+                        ${kpi.additionalInfo ? `<div class="additional-info">${kpi.additionalInfo}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = kpisHTML;
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render all quarters
+            renderQuarterKPIs(KPI_DATA.q1_2025, 'q1');
+            renderQuarterKPIs(KPI_DATA.q2_2025, 'q2');
+            renderQuarterKPIs(KPI_DATA.q3_2025, 'q3');
+            renderQuarterKPIs(KPI_DATA.q4_2025, 'q4');
+
+            // Quarter tab switching
+            document.querySelectorAll('.quarter-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and grids
+                    document.querySelectorAll('.quarter-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.kpi-grid').forEach(g => g.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Show corresponding grid
+                    const quarter = tab.getAttribute('data-quarter');
+                    document.getElementById(quarter).classList.add('active');
+                });
+            });
+
+            // Animate progress bars after rendering
+            setTimeout(() => {
+                const progressBars = document.querySelectorAll('.progress-bar');
+                progressBars.forEach((bar, index) => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 500 + (index * 100));
+                });
+            }, 100);
+        });
+
+        console.log('🎯 QE KPI Progress Tracker loaded successfully');
+        console.log('📊 Data can be easily updated in KPI_DATA configuration');
+    </script>
+</body>
+</html>
