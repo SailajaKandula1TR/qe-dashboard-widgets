@@ -19,34 +19,34 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .header {
             background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 30px 40px;
+            padding: 20px 30px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2.2em;
-            margin-bottom: 10px;
+            font-size: 1.8em;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
         .header p {
-            font-size: 1.1em;
+            font-size: 1em;
             opacity: 0.9;
         }
 
         .content {
-            padding: 40px;
+            padding: 25px;
         }
 
         .quarter-tabs {
@@ -87,43 +87,51 @@
         }
 
         .kpi-grid.active {
-            display: block;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 15px;
+        }
+
+        @media (max-width: 1000px) {
+            .kpi-grid.active {
+                grid-template-columns: 1fr;
+            }
         }
 
         .kpi-section {
-            margin-bottom: 35px;
+            margin-bottom: 20px;
             background: #f8f9fa;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .kpi-title {
-            font-size: 1.1em;
+            font-size: 0.95em;
             font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
         }
 
         .kpi-icon {
-            margin-right: 10px;
-            font-size: 1.2em;
+            margin-right: 8px;
+            font-size: 1em;
         }
 
         .progress-bar-container {
             position: relative;
             background: #e9ecef;
-            height: 40px;
-            border-radius: 20px;
+            height: 30px;
+            border-radius: 15px;
             overflow: hidden;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .progress-bar {
             height: 100%;
-            border-radius: 20px;
+            border-radius: 15px;
             position: relative;
             transition: all 0.8s ease;
             display: flex;
@@ -145,8 +153,8 @@
         .progress-text {
             color: white;
             font-weight: 600;
-            padding: 0 15px;
-            font-size: 0.9em;
+            padding: 0 10px;
+            font-size: 0.8em;
         }
 
         .progress-markers {
@@ -172,29 +180,29 @@
 
         .marker-label {
             position: absolute;
-            top: -30px;
-            font-size: 0.65em;
+            top: -25px;
+            font-size: 0.6em;
             color: #333;
             white-space: nowrap;
             transform: translateX(-50%);
             font-weight: 600;
             background: rgba(255, 255, 255, 0.9);
-            padding: 2px 4px;
+            padding: 1px 3px;
             border-radius: 3px;
             border: 1px solid #ddd;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .marker-value {
             position: absolute;
             top: 50%;
             transform: translateY(-50%) translateX(-50%);
-            font-size: 0.6em;
+            font-size: 0.55em;
             color: white;
             font-weight: 700;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
             background: rgba(0, 0, 0, 0.6);
-            padding: 1px 3px;
+            padding: 1px 2px;
             border-radius: 2px;
             white-space: nowrap;
         }
@@ -203,24 +211,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .current-value {
-            font-size: 1.2em;
+            font-size: 1em;
             font-weight: 600;
             color: #2c3e50;
         }
 
         .target-info {
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #666;
         }
 
         .status-badge {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.8em;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -247,8 +255,8 @@
         }
 
         .additional-info {
-            margin-top: 10px;
-            font-size: 0.85em;
+            margin-top: 6px;
+            font-size: 0.8em;
             color: #666;
             font-style: italic;
         }
@@ -256,11 +264,11 @@
         .refresh-info {
             text-align: center;
             color: #666;
-            font-size: 0.9em;
-            margin-top: 30px;
-            padding: 15px;
+            font-size: 0.8em;
+            margin-top: 20px;
+            padding: 10px;
             background: #f1f3f4;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         @media (max-width: 768px) {
