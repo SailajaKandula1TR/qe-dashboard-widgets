@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QE Key Enablers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .enablers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .enabler-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .enabler-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .enabler-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .enabler-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .automation-icon { background: linear-gradient(135deg, #28a745, #20c997); }
+        .testing-icon { background: linear-gradient(135deg, #17a2b8, #007bff); }
+        .tracking-icon { background: linear-gradient(135deg, #fd7e14, #ffc107); }
+        .ai-icon { background: linear-gradient(135deg, #6f42c1, #e83e8c); }
+        .rca-icon { background: linear-gradient(135deg, #dc3545, #fd7e14); }
+
+        .enabler-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .taas-stats {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .taas-stats .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .taas-stats .stat-label {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .taas-stats .stat-value {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: rgba(255, 255, 255, 0.8);
+            height: 100%;
+            border-radius: 4px;
+            width: 91.66%;
+            transition: width 0.3s ease;
+        }
+
+        .enabler-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .enabler-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .enabler-list li:last-child {
+            border-bottom: none;
+        }
+
+        .enabler-list li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .category-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .category-title {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+        }
+
+        .category-desc {
+            color: #856404;
+            font-size: 0.95em;
+        }
+
+        .sha-section {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .sha-title {
+            font-weight: 600;
+            color: #0c5460;
+            margin-bottom: 8px;
+        }
+
+        .sha-item {
+            color: #0c5460;
+            margin: 5px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .sha-item:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #17a2b8;
+            font-weight: bold;
+        }
+
+        .highlight-metric {
+            background: linear-gradient(135deg, #17a2b8, #007bff);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .metric-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .enablers-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QE Key Enablers</h1>
+            <p>Comprehensive Quality Engineering Capabilities & Tools</p>
+        </div>
+
+        <div class="content">
+            <div class="enablers-grid">
+                <!-- TAAS Card -->
+                <div class="enabler-card">
+                    <div class="enabler-header">
+                        <div class="enabler-icon automation-icon">TA</div>
+                        <h3 class="enabler-title">TAAS (Test Automation as a Service)</h3>
+                    </div>
+                    
+                    <div class="taas-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Total Target:</span>
+                            <span class="stat-value">1,200</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Total Automated:</span>
+                            <span class="stat-value">1,100</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Coverage:</span>
+                            <span class="stat-value">91.66%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="" id="taas-details-link" target="_blank" style="display: inline-block; background: #2c3e50; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3); transition: all 0.3s ease; border: 2px solid #34495e;" onmouseover="this.style.background='#34495e'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#2c3e50'; this.style.transform='translateY(0)';">📊 View TAAS Details</a>
+                    </div>
+                </div>
+
+                <!-- Progress Trackers Card -->
+                <div class="enabler-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px solid #4a5568; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3); transform: scale(1.02);">
+                    <div class="enabler-header" style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
+                        <div class="enabler-icon tracking-icon">PT</div>
+                        <h3 class="enabler-title" style="color: white;">Progress Trackers</h3>
+                    </div>
+                    
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <a href="" id="automation-dashboard-link" target="_blank" style="display: block; width: 100%; background: rgba(255, 255, 255, 0.2); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3); text-align: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(0)';">🚀 Automation Dashboard</a>
+                        </div>
+                        <div>
+                            <a href="" id="metric-portal-link" target="_blank" style="display: block; width: 100%; background: rgba(255, 255, 255, 0.2); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3); text-align: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(0)';">📈 Metric Portal</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Usage Tools Card -->
+                <div class="enabler-card">
+                    <div class="enabler-header">
+                        <div class="enabler-icon ai-icon">AI</div>
+                        <h3 class="enabler-title">AI Usage Tools</h3>
+                    </div>
+                    
+                    <ul class="enabler-list">
+                        <li>GitHub Copilot</li>
+                        <li>TR Open Arena</li>
+                        <li>Cline</li>
+                        <li>Cursor AI</li>
+                    </ul>
+                </div>
+
+                <!-- Automation Services Card -->
+                <div class="enabler-card">
+                    <div class="enabler-header">
+                        <div class="enabler-icon automation-icon">AS</div>
+                        <h3 class="enabler-title">Automation Services</h3>
+                    </div>
+                    
+                    <ul class="enabler-list">
+                        <li>N-1 Release Automation</li>
+                        <li>Smoke and RVT</li>
+                        <li>UAT, DF and PROD</li>
+                        <li>API Test Automation</li>
+                        <li>Integration test automation</li>
+                        <li>Mocking of COCO server</li>
+                        <li>Contract testing</li>
+                    </ul>
+                </div>
+
+                <!-- RCA & Analysis Card -->
+                <div class="enabler-card">
+                    <div class="enabler-header">
+                        <div class="enabler-icon rca-icon">RC</div>
+                        <h3 class="enabler-title">RCA & Analysis</h3>
+                    </div>
+                    
+                    <div class="category-section">
+                        <div class="category-title">Process Improvements</div>
+                        <ul class="enabler-list" style="margin-top: 10px;">
+                            <li>Categories defined and made Mandatory</li>
+                            <li>Test Coverage gap: GitHub Copilot usage for edge cases</li>
+                            <li>Recurring calls to brainstorm actions</li>
+                            <li><a href="" id="highq-rca-link" target="_blank" style="display: inline-block; background: #e67e22; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(230, 126, 34, 0.3); transition: all 0.3s ease; border: 2px solid #d35400;" onmouseover="this.style.background='#d35400'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#e67e22'; this.style.transform='translateY(0)';">📂 HighQ RCA Documents</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Testing Services Card -->
+                <div class="enabler-card">
+                    <div class="enabler-header">
+                        <div class="enabler-icon testing-icon">TS</div>
+                        <h3 class="enabler-title">Other Testing Services</h3>
+                    </div>
+                    
+                    <ul class="enabler-list">
+                        <li>Performance testing (Legacy, iSheet & Files)</li>
+                        <li>Migration testing (HiMat)</li>
+                        <li>Security testing (Pen)</li>
+                        <li>Infra testing (Region based - New regions)</li>
+                        <li>Localisation testing</li>
+                        <li>Accessibility testing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION SECTION - Update links here
+        const CONFIG = {
+            TAAS_DETAILS_URL: 'https://trten.sharepoint.com/:x:/r/sites/HighQModernizationProgram/SiteAssets/SitePages/Page(1)/512984323SHA.xlsx?d=wd534a3b464f54798859061228fb194a2&csf=1&web=1&e=yA4vtj',
+            HIGHQ_RCA_DOCUMENTS_URL: 'https://trten.sharepoint.com/:f:/r/sites/HighQModernizationProgram/Shared%20Documents/HighQ%20RCA%20Documents?csf=1&web=1&e=rSOcV9',
+            AUTOMATION_DASHBOARD_URL: 'https://tr-legal.visualstudio.com/HighQ%20Tech/_dashboards/dashboard/e31403d5-25ce-4dff-826b-3c47e76b0c2c',
+            METRIC_PORTAL_URL: 'https://lab1metricsportal.highq.com/'
+        };
+
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all links from CONFIG
+            document.getElementById('taas-details-link').href = CONFIG.TAAS_DETAILS_URL;
+            document.getElementById('highq-rca-link').href = CONFIG.HIGHQ_RCA_DOCUMENTS_URL;
+            document.getElementById('automation-dashboard-link').href = CONFIG.AUTOMATION_DASHBOARD_URL;
+            document.getElementById('metric-portal-link').href = CONFIG.METRIC_PORTAL_URL;
+            
+            const cards = document.querySelectorAll('.enabler-card');
+            
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+
+            // Animate progress bar
+            setTimeout(() => {
+                const progressFill = document.querySelector('.progress-fill');
+                if (progressFill) {
+                    progressFill.style.width = '0%';
+                    setTimeout(() => {
+                        progressFill.style.width = '91.66%';
+                    }, 500);
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
