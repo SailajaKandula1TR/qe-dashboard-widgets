@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCA Template - Root Cause Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 20px 30px;
+        }
+
+        .rca-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-areas: 
+                "summary summary summary summary"
+                "what when where who"
+                "why why why why"
+                "how how how how"
+                "actions actions actions actions"
+                "copy copy copy copy";
+            gap: 10px;
+            align-items: start;
+            align-items: start;
+        }
+
+        .issue-summary { grid-area: summary; }
+        .what-section { grid-area: what; }
+        .when-section { grid-area: when; }
+        .where-section { grid-area: where; }
+        .who-section { grid-area: who; }
+        .why-section { grid-area: why; }
+        .how-section { grid-area: how; }
+        .action-buttons { grid-area: actions; }
+        .copy-section { grid-area: copy; }
+
+        .form-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            border-top: 4px solid #dc3545;
+            height: 350px;
+            overflow-y: auto;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-section .icon {
+            font-size: 1.1em;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 3px;
+            font-size: 0.85em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 6px 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 50px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .priority-high { border-left-color: #dc3545; }
+        .priority-medium { border-left-color: #ffc107; }
+        .priority-low { border-left-color: #28a745; }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .template-info {
+            background: #e7f3ff;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .template-info h4 {
+            color: #0c5460;
+            margin-bottom: 8px;
+        }
+
+        .template-info p {
+            color: #0c5460;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .rca-form {
+                grid-template-columns: 1fr 1fr;
+                grid-template-areas: 
+                    "summary summary"
+                    "what when"
+                    "where who"
+                    "why why"
+                    "how how"
+                    "actions actions"
+                    "copy copy";
+                gap: 12px;
+            }
+            
+            .form-section {
+                min-height: 280px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .rca-form {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "summary"
+                    "what"
+                    "when"
+                    "where"
+                    "who"
+                    "why"
+                    "how"
+                    "actions"
+                    "copy";
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .editable-hint {
+            font-size: 0.8em;
+            color: #6c757d;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .copy-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 25px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 RCA Template</h1>
+            <p>Root Cause Analysis - Standard Template</p>
+        </div>
+
+        <div class="content">
+            <div class="template-info">
+                <h4>📋 Template Instructions</h4>
+                <p>• Fill in all sections with relevant details for your issue</p>
+                <p>• Use clear, concise language for better understanding</p>
+                <p>• Copy the final output for documentation and sharing</p>
+                <p>• Save this template for reuse across different RCA sessions</p>
+            </div>
+
+            <form class="rca-form" id="rcaForm">
+                <!-- Issue Summary Section -->
+                <div class="form-section issue-summary">
+                    <h3><span class="icon">📊</span> Issue Summary</h3>
+                    <div class="form-group">
+                        <label>Issue ID/Ticket Number</label>
+                        <input type="text" id="issueId" placeholder="e.g., INC-2025-001">
+                        <div class="editable-hint">Enter the unique identifier for tracking</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date Reported</label>
+                            <input type="date" id="dateReported">
+                        </div>
+                        <div class="form-group">
+                            <label>Priority Level</label>
+                            <select id="priority">
+                                <option value="">Select Priority</option>
+                                <option value="High">High - Critical Impact</option>
+                                <option value="Medium">Medium - Moderate Impact</option>
+                                <option value="Low">Low - Minor Impact</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Brief Summary</label>
+                        <textarea id="summary" placeholder="Provide a concise overview of the issue..."></textarea>
+                        <div class="editable-hint">2-3 sentences describing the problem</div>
+                    </div>
+                </div>
+
+                <!-- WHO Section -->
+                <div class="form-section who-section">
+                    <h3><span class="icon">👥</span> WHO - People Involved</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Reported By</label>
+                            <input type="text" id="reportedBy" placeholder="Name, Role, Team">
+                        </div>
+                        <div class="form-group">
+                            <label>RCA Analyst</label>
+                            <input type="text" id="analyst" placeholder="Your Name, Role">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Affected Users/Teams</label>
+                        <textarea id="affectedUsers" placeholder="List impacted users, teams, or systems..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Key Stakeholders</label>
+                        <input type="text" id="stakeholders" placeholder="Names and roles of involved stakeholders">
+                    </div>
+                </div>
+
+                <!-- WHERE Section -->
+                <div class="form-section where-section">
+                    <h3><span class="icon">🌐</span> WHERE - Environment</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Environment</label>
+                            <select id="environment">
+                                <option value="">Select Environment</option>
+                                <option value="Production">Production</option>
+                                <option value="Staging">Staging</option>
+                                <option value="Development">Development</option>
+                                <option value="Testing">Testing</option>
+                                <option value="UAT">UAT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>System/Application</label>
+                            <input type="text" id="system" placeholder="e.g., HighQ iSheet, Legacy System">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Specific Location/Module</label>
+                        <input type="text" id="location" placeholder="URL, file path, module name, or specific location">
+                    </div>
+                    <div class="form-group">
+                        <label>Geographic/Network Details</label>
+                        <textarea id="networkDetails" placeholder="Region, data center, network configuration if relevant..."></textarea>
+                    </div>
+                </div>
+
+                <!-- WHAT Section -->
+                <div class="form-section what-section">
+                    <h3><span class="icon">❗</span> WHAT - Problem Details</h3>
+                    <div class="form-group">
+                        <label>What Happened?</label>
+                        <textarea id="whatHappened" placeholder="Describe exactly what occurred..."></textarea>
+                        <div class="editable-hint">Detailed description of the issue</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Expected vs Actual Behavior</label>
+                        <textarea id="expectedVsActual" placeholder="Expected: [What should have happened]&#10;Actual: [What actually happened]"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Error Messages/Codes</label>
+                            <input type="text" id="errorCodes" placeholder="Specific error messages or codes">
+                        </div>
+                        <div class="form-group">
+                            <label>Impact Level</label>
+                            <select id="impact">
+                                <option value="">Select Impact</option>
+                                <option value="Critical">Critical - System Down</option>
+                                <option value="High">High - Major Functionality Lost</option>
+                                <option value="Medium">Medium - Reduced Functionality</option>
+                                <option value="Low">Low - Minor Issues</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WHEN Section -->
+                <div class="form-section when-section">
+                    <h3><span class="icon">⏰</span> WHEN - Timeline</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>When Did It Start?</label>
+                            <input type="datetime-local" id="startTime">
+                        </div>
+                        <div class="form-group">
+                            <label>When Was It Resolved?</label>
+                            <input type="datetime-local" id="endTime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency/Pattern</label>
+                        <select id="frequency">
+                            <option value="">Select Frequency</option>
+                            <option value="One-time">One-time occurrence</option>
+                            <option value="Intermittent">Intermittent</option>
+                            <option value="Recurring">Recurring pattern</option>
+                            <option value="Continuous">Continuous issue</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Timeline of Events</label>
+                        <textarea id="timeline" placeholder="Chronological sequence of events leading to and during the issue..."></textarea>
+                    </div>
+                </div>
+
+                <!-- WHY Section -->
+                <div class="form-section why-section">
+                    <h3><span class="icon">🤔</span> WHY - Root Cause Analysis</h3>
+                    <div class="form-group">
+                        <label>Immediate Cause</label>
+                        <textarea id="immediateCause" placeholder="What directly triggered the issue?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Root Cause (5 Whys Analysis)</label>
+                        <textarea id="rootCause" placeholder="Why 1: [First why]&#10;Why 2: [Second why]&#10;Why 3: [Third why]&#10;Why 4: [Fourth why]&#10;Why 5: [Fifth why - Root cause]" rows="6"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Contributing Factors</label>
+                        <textarea id="contributingFactors" placeholder="Other factors that contributed to the issue..."></textarea>
+                    </div>
+                </div>
+
+                <!-- HOW Section -->
+                <div class="form-section how-section">
+                    <h3><span class="icon">🛠️</span> HOW - Resolution & Prevention</h3>
+                    <div class="form-group">
+                        <label>How Was It Fixed? (Immediate Resolution)</label>
+                        <textarea id="immediateResolution" placeholder="Steps taken to resolve the immediate issue..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Preventive Actions</label>
+                        <textarea id="preventiveActions" placeholder="Actions to prevent recurrence..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Owner of Actions</label>
+                            <input type="text" id="actionOwner" placeholder="Person responsible for implementing actions">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Completion Date</label>
+                            <input type="date" id="targetDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Lessons Learned</label>
+                        <textarea id="lessonsLearned" placeholder="Key takeaways and improvements for future..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-primary" onclick="generateRCAReport()">📄 Generate Word Document</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">🔄 Clear Form</button>
+                    <button type="button" class="btn btn-secondary" onclick="copyToClipboard()">📋 Copy Text Version</button>
+                </div>
+
+                <!-- Copy Section -->
+                <div class="copy-section" id="copySection" style="display: none;">
+                    <h4>📄 Text Preview (for copying if needed)</h4>
+                    <p style="color: #856404; font-size: 0.9em; margin-bottom: 10px;">
+                        Word document has been generated and downloaded. Use the text below for copying if needed.
+                    </p>
+                    <textarea id="generatedReport" readonly style="width: 100%; min-height: 300px; margin-top: 10px; font-family: monospace; font-size: 12px;"></textarea>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function generateRCAReport() {
+            // Generate Word document
+            generateWordDocument();
+            
+            // Also show preview in textarea for copying if needed
+            const report = `
+RCA REPORT - ROOT CAUSE ANALYSIS
+=====================================
+
+ISSUE SUMMARY
+-------------
+Issue ID: ${document.getElementById('issueId').value || 'N/A'}
+Date Reported: ${document.getElementById('dateReported').value || 'N/A'}
+Priority: ${document.getElementById('priority').value || 'N/A'}
+Summary: ${document.getElementById('summary').value || 'N/A'}
+
+WHO - PEOPLE INVOLVED
+---------------------
+Reported By: ${document.getElementById('reportedBy').value || 'N/A'}
+RCA Analyst: ${document.getElementById('analyst').value || 'N/A'}
+Affected Users: ${document.getElementById('affectedUsers').value || 'N/A'}
+Stakeholders: ${document.getElementById('stakeholders').value || 'N/A'}
+
+WHERE - LOCATION & ENVIRONMENT
+------------------------------
+Environment: ${document.getElementById('environment').value || 'N/A'}
+System/Application: ${document.getElementById('system').value || 'N/A'}
+Location: ${document.getElementById('location').value || 'N/A'}
+Network Details: ${document.getElementById('networkDetails').value || 'N/A'}
+
+WHAT - PROBLEM DETAILS
+----------------------
+What Happened: ${document.getElementById('whatHappened').value || 'N/A'}
+Expected vs Actual: ${document.getElementById('expectedVsActual').value || 'N/A'}
+Error Messages: ${document.getElementById('errorCodes').value || 'N/A'}
+Impact Level: ${document.getElementById('impact').value || 'N/A'}
+
+WHEN - TIMELINE
+---------------
+Start Time: ${document.getElementById('startTime').value || 'N/A'}
+End Time: ${document.getElementById('endTime').value || 'N/A'}
+Frequency: ${document.getElementById('frequency').value || 'N/A'}
+Timeline: ${document.getElementById('timeline').value || 'N/A'}
+
+WHY - ROOT CAUSE ANALYSIS
+-------------------------
+Immediate Cause: ${document.getElementById('immediateCause').value || 'N/A'}
+Root Cause (5 Whys): ${document.getElementById('rootCause').value || 'N/A'}
+Contributing Factors: ${document.getElementById('contributingFactors').value || 'N/A'}
+
+HOW - RESOLUTION & PREVENTION
+-----------------------------
+Immediate Resolution: ${document.getElementById('immediateResolution').value || 'N/A'}
+Preventive Actions: ${document.getElementById('preventiveActions').value || 'N/A'}
+Action Owner: ${document.getElementById('actionOwner').value || 'N/A'}
+Target Date: ${document.getElementById('targetDate').value || 'N/A'}
+Lessons Learned: ${document.getElementById('lessonsLearned').value || 'N/A'}
+
+=====================================
+Generated on: ${new Date().toLocaleString()}
+            `;
+
+            document.getElementById('generatedReport').value = report.trim();
+            document.getElementById('copySection').style.display = 'block';
+            document.getElementById('copySection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateWordDocument() {
+            // Create HTML content for Word document with proper formatting
+            const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RCA Report</title>
+    <style>
+        body { 
+            font-family: 'Calibri', 'Arial', sans-serif; 
+            font-size: 11pt; 
+            line-height: 1.15; 
+            margin: 1in;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 3px solid #dc3545;
+            padding-bottom: 10px;
+        }
+        .header h1 { 
+            color: #dc3545; 
+            font-size: 18pt; 
+            margin: 0; 
+            font-weight: bold;
+        }
+        .header p { 
+            color: #666; 
+            margin: 5px 0; 
+            font-style: italic;
+        }
+        .section { 
+            margin-bottom: 20px; 
+            page-break-inside: avoid;
+        }
+        .section-title { 
+            background-color: #dc3545; 
+            color: white; 
+            padding: 8px 12px; 
+            font-weight: bold; 
+            font-size: 12pt;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .field-group { 
+            margin-bottom: 12px; 
+        }
+        .field-label { 
+            font-weight: bold; 
+            color: #2c3e50; 
+            display: inline-block;
+            min-width: 150px;
+            margin-bottom: 2px;
+        }
+        .field-value { 
+            color: #333; 
+            margin-left: 10px;
+            display: inline-block;
+            vertical-align: top;
+            max-width: calc(100% - 160px);
+            word-wrap: break-word;
+        }
+        .field-block {
+            display: block;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #f8f9fa;
+            border-left: 3px solid #dc3545;
+            border-radius: 2px;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+            font-size: 10pt;
+            color: #666;
+            text-align: center;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media print {
+            body { margin: 0.5in; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 ROOT CAUSE ANALYSIS REPORT</h1>
+        <p>Quality Engineering - RCA Documentation</p>
+        <p>Generated on: ${new Date().toLocaleString()}</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">📊 ISSUE SUMMARY</div>
+        <div class="two-column">
+            <div class="field-group">
+                <div class="field-label">Issue ID:</div>
+                <div class="field-value">${document.getElementById('issueId').value || 'Not specified'}</div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Date Reported:</div>
+                <div class="field-value">${document.getElementById('dateReported').value || 'Not specified'}</div>
+            </div>
+        </div>
+        <div class="two-column">
+            <div class="field-group">
+                <div class="field-label">Priority Level:</div>
+                <div class="field-value">${document.getElementById('priority').value || 'Not specified'}</div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Impact Level:</div>
+                <div class="field-value">${document.getElementById('impact').value || 'Not specified'}</div>
+            </div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Summary:</div>
+            <div class="field-block">${document.getElementById('summary').value || 'Not provided'}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">👥 WHO - PEOPLE INVOLVED</div>
+        <div class="two-column">
+            <div class="field-group">
+                <div class="field-label">Reported By:</div>
+                <div class="field-value">${document.getElementById('reportedBy').value || 'Not specified'}</div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">RCA Analyst:</div>
+                <div class="field-value">${document.getElementById('analyst').value || 'Not specified'}</div>
+            </div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Affected Users/Teams:</div>
+            <div class="field-block">${document.getElementById('affectedUsers').value || 'Not specified'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Key Stakeholders:</div>
+            <div class="field-block">${document.getElementById('stakeholders').value || 'Not specified'}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🌐 WHERE - LOCATION & ENVIRONMENT</div>
+        <div class="two-column">
+            <div class="field-group">
+                <div class="field-label">Environment:</div>
+                <div class="field-value">${document.getElementById('environment').value || 'Not specified'}</div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">System/Application:</div>
+                <div class="field-value">${document.getElementById('system').value || 'Not specified'}</div>
+            </div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Specific Location:</div>
+            <div class="field-block">${document.getElementById('location').value || 'Not specified'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Network Details:</div>
+            <div class="field-block">${document.getElementById('networkDetails').value || 'Not specified'}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">❗ WHAT - PROBLEM DETAILS</div>
+        <div class="field-group">
+            <div class="field-label">What Happened:</div>
+            <div class="field-block">${document.getElementById('whatHappened').value || 'Not provided'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Expected vs Actual:</div>
+            <div class="field-block">${document.getElementById('expectedVsActual').value || 'Not provided'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Error Messages/Codes:</div>
+            <div class="field-block">${document.getElementById('errorCodes').value || 'None reported'}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">⏰ WHEN - TIMELINE</div>
+        <div class="two-column">
+            <div class="field-group">
+                <div class="field-label">Start Time:</div>
+                <div class="field-value">${document.getElementById('startTime').value || 'Not specified'}</div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">End Time:</div>
+                <div class="field-value">${document.getElementById('endTime').value || 'Not specified'}</div>
+            </div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Frequency:</div>
+            <div class="field-value">${document.getElementById('frequency').value || 'Not specified'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Timeline of Events:</div>
+            <div class="field-block">${document.getElementById('timeline').value || 'Not provided'}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🤔 WHY - ROOT CAUSE ANALYSIS</div>
+        <div class="field-group">
+            <div class="field-label">Immediate Cause:</div>
+            <div class="field-block">${document.getElementById('immediateCause').value || 'Not identified'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Root Cause (5 Whys):</div>
+            <div class="field-block">${document.getElementById('rootCause').value || 'Analysis pending'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Contributing Factors:</div>
+            <div class="field-block">${document.getElementById('contributingFactors').value || 'None identified'}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🛠️ HOW - RESOLUTION & PREVENTION</div>
+        <div class="field-group">
+            <div class="field-label">Immediate Resolution:</div>
+            <div class="field-block">${document.getElementById('immediateResolution').value || 'Not provided'}</div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Preventive Actions:</div>
+            <div class="field-block">${document.getElementById('preventiveActions').value || 'Not defined'}</div>
+        </div>
+        <div class="two-column">
+            <div class="field-group">
+                <div class="field-label">Action Owner:</div>
+                <div class="field-value">${document.getElementById('actionOwner').value || 'Not assigned'}</div>
+            </div>
+            <div class="field-group">
+                <div class="field-label">Target Date:</div>
+                <div class="field-value">${document.getElementById('targetDate').value || 'Not set'}</div>
+            </div>
+        </div>
+        <div class="field-group">
+            <div class="field-label">Lessons Learned:</div>
+            <div class="field-block">${document.getElementById('lessonsLearned').value || 'Not documented'}</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Quality Engineering Team</strong> | Root Cause Analysis Report</p>
+        <p>This document is confidential and intended for internal use only.</p>
+    </div>
+</body>
+</html>`;
+
+            // Create and download Word document
+            const blob = new Blob([htmlContent], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            
+            const issueId = document.getElementById('issueId').value || 'RCA';
+            const date = new Date().toISOString().split('T')[0];
+            link.href = url;
+            link.download = `RCA_Report_${issueId}_${date}.doc`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('📄 Word document generated and downloaded successfully!\n\nFile: RCA_Report_' + issueId + '_' + date + '.doc');
+        }
+
+        function clearForm() {
+            if (confirm('Are you sure you want to clear all form data?')) {
+                document.getElementById('rcaForm').reset();
+                document.getElementById('copySection').style.display = 'none';
+            }
+        }
+
+        function copyToClipboard() {
+            const reportText = document.getElementById('generatedReport').value;
+            if (reportText) {
+                navigator.clipboard.writeText(reportText).then(() => {
+                    alert('RCA Report copied to clipboard!');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    document.getElementById('generatedReport').select();
+                    document.execCommand('copy');
+                    alert('RCA Report copied to clipboard!');
+                });
+            } else {
+                alert('Please generate the report first!');
+            }
+        }
+
+        // Set current date as default for date reported
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateReported').value = today;
+        });
+    </script>
+</body>
+</html>
