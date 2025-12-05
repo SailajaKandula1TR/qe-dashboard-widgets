@@ -386,13 +386,11 @@
                                 <li>Categories defined and made Mandatory</li>
                                 <li>Test Coverage gap: GitHub Copilot usage for edge cases</li>
                                 <li>Recurring calls to brainstorm actions</li>
-                                <li><a href="" id="highq-rca-link" target="_blank" style="display: inline-block; background: #e67e22; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(230, 126, 34, 0.3); transition: all 0.3s ease; border: 2px solid #d35400;" onmouseover="this.style.background='#d35400'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#e67e22'; this.style.transform='translateY(0)';">📂 HighQ RCA Documents</a></li>
                             </ul>
+                            <div style="margin-top: 15px; text-align: left;">
+                                <a href="" id="highq-rca-link" target="_blank" style="display: inline-block; background: #e67e22; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(230, 126, 34, 0.3); transition: all 0.3s ease; border: 2px solid #d35400;" onmouseover="this.style.background='#d35400'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#e67e22'; this.style.transform='translateY(0)';">📂 HighQ RCA Documents</a>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="card-buttons" style="text-align: center; margin-top: 15px;">
-                        <a href="" id="rca-template-link" target="_blank" style="display: inline-block; background: #dc3545; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3); transition: all 0.3s ease; border: 2px solid #c82333;" onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)';">📋 Generate RCA Report</a>
                     </div>
                 </div>
 
@@ -424,8 +422,7 @@
             TAAS_DETAILS_URL: 'https://trten.sharepoint.com/:x:/r/sites/HighQModernizationProgram/SiteAssets/SitePages/Page(1)/512984323SHA.xlsx?d=wd534a3b464f54798859061228fb194a2&csf=1&web=1&e=yA4vtj',
             HIGHQ_RCA_DOCUMENTS_URL: 'https://trten.sharepoint.com/:f:/r/sites/HighQModernizationProgram/Shared%20Documents/HighQ%20RCA%20Documents?csf=1&web=1&e=rSOcV9',
             AUTOMATION_DASHBOARD_URL: 'https://tr-legal.visualstudio.com/HighQ%20Tech/_dashboards/dashboard/e31403d5-25ce-4dff-826b-3c47e76b0c2c',
-            METRIC_PORTAL_URL: 'https://lab1metricsportal.highq.com/',
-            RCA_TEMPLATE_URL: 'https://sailajakandula1tr.github.io/qe-dashboard-widgets/rca-template.html'
+            METRIC_PORTAL_URL: 'https://lab1metricsportal.highq.com/'
         };
 
         // Add some interactive animations
@@ -435,7 +432,6 @@
             document.getElementById('highq-rca-link').href = CONFIG.HIGHQ_RCA_DOCUMENTS_URL;
             document.getElementById('automation-dashboard-link').href = CONFIG.AUTOMATION_DASHBOARD_URL;
             document.getElementById('metric-portal-link').href = CONFIG.METRIC_PORTAL_URL;
-            document.getElementById('rca-template-link').href = CONFIG.RCA_TEMPLATE_URL;
             
             const cards = document.querySelectorAll('.enabler-card');
             
@@ -466,4 +462,3 @@
     </script>
 </body>
 </html>
-
