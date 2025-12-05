@@ -51,9 +51,10 @@
 
         .enablers-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin-top: 20px;
+            align-items: stretch;
         }
 
         .enabler-card {
@@ -63,11 +64,25 @@
             padding: 25px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 200px;
         }
 
         .enabler-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-buttons {
+            margin-top: auto;
+            padding-top: 15px;
         }
 
         .enabler-header {
@@ -237,9 +252,17 @@
             font-size: 0.9em;
         }
 
+        @media (max-width: 1024px) {
+            .enablers-grid {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
             .enablers-grid {
                 grid-template-columns: 1fr;
+                gap: 15px;
             }
             
             .container {
@@ -263,42 +286,46 @@
             <div class="enablers-grid">
                 <!-- TAAS Card -->
                 <div class="enabler-card">
-                    <div class="enabler-header">
-                        <div class="enabler-icon automation-icon">TA</div>
-                        <h3 class="enabler-title">TAAS (Test Automation as a Service)</h3>
-                    </div>
-                    
-                    <div class="taas-stats">
-                        <div class="stat-row">
-                            <span class="stat-label">Total Target:</span>
-                            <span class="stat-value">1,200</span>
+                    <div class="card-content">
+                        <div class="enabler-header">
+                            <div class="enabler-icon automation-icon">TA</div>
+                            <h3 class="enabler-title">TAAS (Test Automation as a Service)</h3>
                         </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Total Automated:</span>
-                            <span class="stat-value">1,100</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Coverage:</span>
-                            <span class="stat-value">91.66%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
+                        
+                        <div class="taas-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Total Target:</span>
+                                <span class="stat-value">1,200</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Total Automated:</span>
+                                <span class="stat-value">1,100</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Coverage:</span>
+                                <span class="stat-value">91.66%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="text-align: center; margin-top: 15px;">
+                    <div class="card-buttons" style="text-align: center;">
                         <a href="" id="taas-details-link" target="_blank" style="display: inline-block; background: #2c3e50; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3); transition: all 0.3s ease; border: 2px solid #34495e;" onmouseover="this.style.background='#34495e'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#2c3e50'; this.style.transform='translateY(0)';">📊 View TAAS Details</a>
                     </div>
                 </div>
 
                 <!-- Progress Trackers Card -->
-                <div class="enabler-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px solid #4a5568; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3); transform: scale(1.02);">
-                    <div class="enabler-header" style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
-                        <div class="enabler-icon tracking-icon">PT</div>
-                        <h3 class="enabler-title" style="color: white;">Progress Trackers</h3>
+                <div class="enabler-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px solid #4a5568; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);">
+                    <div class="card-content">
+                        <div class="enabler-header" style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
+                            <div class="enabler-icon tracking-icon">PT</div>
+                            <h3 class="enabler-title" style="color: white;">Progress Trackers</h3>
+                        </div>
                     </div>
                     
-                    <div style="padding: 20px;">
+                    <div class="card-buttons" style="padding: 20px;">
                         <div style="margin-bottom: 15px;">
                             <a href="" id="automation-dashboard-link" target="_blank" style="display: block; width: 100%; background: rgba(255, 255, 255, 0.2); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3); text-align: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(0)';">🚀 Automation Dashboard</a>
                         </div>
@@ -310,70 +337,82 @@
 
                 <!-- AI Usage Tools Card -->
                 <div class="enabler-card">
-                    <div class="enabler-header">
-                        <div class="enabler-icon ai-icon">AI</div>
-                        <h3 class="enabler-title">AI Usage Tools</h3>
+                    <div class="card-content">
+                        <div class="enabler-header">
+                            <div class="enabler-icon ai-icon">AI</div>
+                            <h3 class="enabler-title">AI Usage Tools</h3>
+                        </div>
+                        
+                        <ul class="enabler-list">
+                            <li>GitHub Copilot</li>
+                            <li>TR Open Arena</li>
+                            <li>Cline</li>
+                            <li>Cursor AI</li>
+                        </ul>
                     </div>
-                    
-                    <ul class="enabler-list">
-                        <li>GitHub Copilot</li>
-                        <li>TR Open Arena</li>
-                        <li>Cline</li>
-                        <li>Cursor AI</li>
-                    </ul>
                 </div>
 
                 <!-- Automation Services Card -->
                 <div class="enabler-card">
-                    <div class="enabler-header">
-                        <div class="enabler-icon automation-icon">AS</div>
-                        <h3 class="enabler-title">Automation Services</h3>
+                    <div class="card-content">
+                        <div class="enabler-header">
+                            <div class="enabler-icon automation-icon">AS</div>
+                            <h3 class="enabler-title">Automation Services</h3>
+                        </div>
+                        
+                        <ul class="enabler-list">
+                            <li>N-1 Release Automation</li>
+                            <li>Smoke and RVT</li>
+                            <li>UAT, DF and PROD</li>
+                            <li>API Test Automation</li>
+                            <li>Integration test automation</li>
+                            <li>Mocking of COCO server</li>
+                            <li>Contract testing</li>
+                        </ul>
                     </div>
-                    
-                    <ul class="enabler-list">
-                        <li>N-1 Release Automation</li>
-                        <li>Smoke and RVT</li>
-                        <li>UAT, DF and PROD</li>
-                        <li>API Test Automation</li>
-                        <li>Integration test automation</li>
-                        <li>Mocking of COCO server</li>
-                        <li>Contract testing</li>
-                    </ul>
                 </div>
 
                 <!-- RCA & Analysis Card -->
                 <div class="enabler-card">
-                    <div class="enabler-header">
-                        <div class="enabler-icon rca-icon">RC</div>
-                        <h3 class="enabler-title">RCA & Analysis</h3>
+                    <div class="card-content">
+                        <div class="enabler-header">
+                            <div class="enabler-icon rca-icon">RC</div>
+                            <h3 class="enabler-title">RCA & Analysis</h3>
+                        </div>
+                        
+                        <div class="category-section">
+                            <div class="category-title">Process Improvements</div>
+                            <ul class="enabler-list" style="margin-top: 10px;">
+                                <li>Categories defined and made Mandatory</li>
+                                <li>Test Coverage gap: GitHub Copilot usage for edge cases</li>
+                                <li>Recurring calls to brainstorm actions</li>
+                                <li><a href="" id="highq-rca-link" target="_blank" style="display: inline-block; background: #e67e22; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(230, 126, 34, 0.3); transition: all 0.3s ease; border: 2px solid #d35400;" onmouseover="this.style.background='#d35400'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#e67e22'; this.style.transform='translateY(0)';">📂 HighQ RCA Documents</a></li>
+                            </ul>
+                        </div>
                     </div>
                     
-                    <div class="category-section">
-                        <div class="category-title">Process Improvements</div>
-                        <ul class="enabler-list" style="margin-top: 10px;">
-                            <li>Categories defined and made Mandatory</li>
-                            <li>Test Coverage gap: GitHub Copilot usage for edge cases</li>
-                            <li>Recurring calls to brainstorm actions</li>
-                            <li><a href="" id="highq-rca-link" target="_blank" style="display: inline-block; background: #e67e22; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(230, 126, 34, 0.3); transition: all 0.3s ease; border: 2px solid #d35400;" onmouseover="this.style.background='#d35400'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#e67e22'; this.style.transform='translateY(0)';">📂 HighQ RCA Documents</a></li>
-                        </ul>
+                    <div class="card-buttons" style="text-align: center; margin-top: 15px;">
+                        <a href="" id="rca-template-link" target="_blank" style="display: inline-block; background: #dc3545; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3); transition: all 0.3s ease; border: 2px solid #c82333;" onmouseover="this.style.background='#c82333'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#dc3545'; this.style.transform='translateY(0)';">📋 Generate RCA Report</a>
                     </div>
                 </div>
 
                 <!-- Testing Services Card -->
                 <div class="enabler-card">
-                    <div class="enabler-header">
-                        <div class="enabler-icon testing-icon">TS</div>
-                        <h3 class="enabler-title">Other Testing Services</h3>
+                    <div class="card-content">
+                        <div class="enabler-header">
+                            <div class="enabler-icon testing-icon">TS</div>
+                            <h3 class="enabler-title">Other Testing Services</h3>
+                        </div>
+                        
+                        <ul class="enabler-list">
+                            <li>Performance testing (Legacy, iSheet & Files)</li>
+                            <li>Migration testing (HiMat)</li>
+                            <li>Security testing (Pen)</li>
+                            <li>Infra testing (Region based - New regions)</li>
+                            <li>Localisation testing</li>
+                            <li>Accessibility testing</li>
+                        </ul>
                     </div>
-                    
-                    <ul class="enabler-list">
-                        <li>Performance testing (Legacy, iSheet & Files)</li>
-                        <li>Migration testing (HiMat)</li>
-                        <li>Security testing (Pen)</li>
-                        <li>Infra testing (Region based - New regions)</li>
-                        <li>Localisation testing</li>
-                        <li>Accessibility testing</li>
-                    </ul>
                 </div>
             </div>
         </div>
@@ -385,7 +424,8 @@
             TAAS_DETAILS_URL: 'https://trten.sharepoint.com/:x:/r/sites/HighQModernizationProgram/SiteAssets/SitePages/Page(1)/512984323SHA.xlsx?d=wd534a3b464f54798859061228fb194a2&csf=1&web=1&e=yA4vtj',
             HIGHQ_RCA_DOCUMENTS_URL: 'https://trten.sharepoint.com/:f:/r/sites/HighQModernizationProgram/Shared%20Documents/HighQ%20RCA%20Documents?csf=1&web=1&e=rSOcV9',
             AUTOMATION_DASHBOARD_URL: 'https://tr-legal.visualstudio.com/HighQ%20Tech/_dashboards/dashboard/e31403d5-25ce-4dff-826b-3c47e76b0c2c',
-            METRIC_PORTAL_URL: 'https://lab1metricsportal.highq.com/'
+            METRIC_PORTAL_URL: 'https://lab1metricsportal.highq.com/',
+            RCA_TEMPLATE_URL: 'https://sailajakandula1tr.github.io/qe-widgets-repo/rca-template.html'
         };
 
         // Add some interactive animations
@@ -395,6 +435,7 @@
             document.getElementById('highq-rca-link').href = CONFIG.HIGHQ_RCA_DOCUMENTS_URL;
             document.getElementById('automation-dashboard-link').href = CONFIG.AUTOMATION_DASHBOARD_URL;
             document.getElementById('metric-portal-link').href = CONFIG.METRIC_PORTAL_URL;
+            document.getElementById('rca-template-link').href = CONFIG.RCA_TEMPLATE_URL;
             
             const cards = document.querySelectorAll('.enabler-card');
             
