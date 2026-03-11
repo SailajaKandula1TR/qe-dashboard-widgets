@@ -158,53 +158,7 @@
         }
 
         .progress-markers {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .progress-marker {
-            position: absolute;
-            width: 2px;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 1px;
-            box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
-        }
-
-        .marker-label {
-            position: absolute;
-            top: -25px;
-            font-size: 0.6em;
-            color: #333;
-            white-space: nowrap;
-            transform: translateX(-50%);
-            font-weight: 600;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 1px 3px;
-            border-radius: 3px;
-            border: 1px solid #ddd;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .marker-value {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%) translateX(-50%);
-            font-size: 0.55em;
-            color: white;
-            font-weight: 700;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-            background: rgba(0, 0, 0, 0.6);
-            padding: 1px 2px;
-            border-radius: 2px;
-            white-space: nowrap;
+            display: none;
         }
 
         .kpi-details {
@@ -301,15 +255,15 @@
 
         <div class="content">
             <div class="quarter-tabs">
-                <button class="quarter-tab active" data-quarter="q4_2025">Q4 2025 (Current)</button>
-                <button class="quarter-tab" data-quarter="q1_2026">Q1 2026 (Upcoming)</button>
-                <button class="quarter-tab" data-quarter="q2_2026">Q2 2026 (Future)</button>
+                <button class="quarter-tab" data-quarter="q4_2025">Q4 2025 (Historical)</button>
+                <button class="quarter-tab" data-quarter="q1_2026">Q1 2026 (Previous)</button>
+                <button class="quarter-tab active" data-quarter="q2_2026">Q2 2026 (Current)</button>
                 <button class="quarter-tab" data-quarter="q3_2026">Q3 2026 (Future)</button>
                 <button class="quarter-tab" data-quarter="q4_2026">Q4 2026 (Future)</button>
             </div>
 
             <!-- Q4 2025 KPIs -->
-            <div id="q4_2025" class="kpi-grid active">
+            <div id="q4_2025" class="kpi-grid">
                 <!-- KPIs will be dynamically generated here -->
             </div>
 
@@ -319,7 +273,7 @@
             </div>
 
             <!-- Q2 2026 KPIs -->
-            <div id="q2_2026" class="kpi-grid">
+            <div id="q2_2026" class="kpi-grid active">
                 <!-- KPIs will be dynamically generated here -->
             </div>
 
@@ -434,74 +388,74 @@
                     {
                         name: "Unit Coverage - Collab",
                         icon: "🧪",
-                        current: 15,
+                        current: 20,
                         target: 22,
                         unit: "%",
                         milestones: [18, 20],
-                        additionalInfo: "Goal for Q1 2026"
+                        additionalInfo: "Significant progress in Q1"
                     },
                     {
                         name: "Unit Coverage - MS",
                         icon: "🔬",
-                        current: 82,
+                        current: 84,
                         target: 85,
                         unit: "%",
-                        milestones: [84, 85],
-                        additionalInfo: "Goal for Q1 2026"
+                        milestones: [82, 84],
+                        additionalInfo: "Steady growth in Microservices"
                     },
                     {
                         name: "Test Coverage",
                         icon: "🧪",
-                        current: 65,
+                        current: 68,
                         target: 70,
                         unit: "%",
-                        milestones: [68, 70],
-                        additionalInfo: "Tool: ADO MCP - Q1 target"
+                        milestones: [65, 68],
+                        additionalInfo: "On track for Q1 target"
                     },
                     {
                         name: "IT/Contract Test Coverage",
                         icon: "🤝",
-                        current: 25,
+                        current: 0,
                         target: 50,
                         unit: "%",
                         milestones: [35, 45],
-                        additionalInfo: "Q1 goal"
+                        additionalInfo: "Not started in Q1"
                     },
                     {
                         name: "API Test Automation",
                         icon: "🔗",
-                        current: 8,
+                        current: 18,
                         target: 20,
                         unit: "%",
                         milestones: [12, 16],
-                        additionalInfo: "Isheet APIs focus Q1"
+                        additionalInfo: "API automation coverage increased"
                     },
                     {
                         name: "UI Automation",
                         icon: "🖥️",
-                        current: 75,
+                        current: 82,
                         target: 85,
                         unit: "%",
-                        milestones: [80, 85],
-                        additionalInfo: "Q1 automation target"
+                        milestones: [80, 82],
+                        additionalInfo: "Playwright suite expanding"
                     },
                     {
                         name: "Automation Pass Rate",
                         icon: "✅",
-                        current: 75,
+                        current: 88,
                         target: 90,
                         unit: "%",
                         milestones: [85, 88],
-                        additionalInfo: "Q1 pass rate goal"
+                        additionalInfo: "Pass rate near target"
                     },
                     {
                         name: "Defect Backlog",
                         icon: "🐛",
-                        current: 35,
+                        current: 12,
                         target: 8,
                         unit: "",
-                        milestones: [20, 15, 10],
-                        additionalInfo: "Lower is better - Q1 target",
+                        milestones: [20, 15, 12],
+                        additionalInfo: "Backlog significantly reduced",
                         isReverse: true
                     }
                 ]
@@ -511,7 +465,79 @@
                 startDate: new Date("2026-04-01"),
                 endDate: new Date("2026-06-30"),
                 kpis: [
-                    // Add Q2 data as it becomes available
+                    {
+                        name: "Unit Coverage - Collab",
+                        icon: "🧪",
+                        current: 20,
+                        target: 25,
+                        unit: "%",
+                        milestones: [22, 24],
+                        additionalInfo: "Incremental target for Q2"
+                    },
+                    {
+                        name: "Unit Coverage - MS",
+                        icon: "🔬",
+                        current: 84,
+                        target: 90,
+                        unit: "%",
+                        milestones: [86, 88],
+                        additionalInfo: "Pushing for >90% coverage"
+                    },
+                    {
+                        name: "Test Coverage",
+                        icon: "🧪",
+                        current: 68,
+                        target: 75,
+                        unit: "%",
+                        milestones: [70, 72],
+                        additionalInfo: "Expansion of coverage metrics"
+                    },
+                    {
+                        name: "IT/Contract Test Coverage",
+                        icon: "🤝",
+                        current: 0,
+                        target: 60,
+                        unit: "%",
+                        milestones: [50, 55],
+                        additionalInfo: "Focus on contract testing tools"
+                    },
+                    {
+                        name: "API Test Automation",
+                        icon: "🔗",
+                        current: 18,
+                        target: 30,
+                        unit: "%",
+                        milestones: [22, 26],
+                        additionalInfo: "Q2 focus on legacy API automation"
+                    },
+                    {
+                        name: "UI Automation",
+                        icon: "🖥️",
+                        current: 82,
+                        target: 90,
+                        unit: "%",
+                        milestones: [85, 88],
+                        additionalInfo: "Regression suite completion"
+                    },
+                    {
+                        name: "Automation Pass Rate",
+                        icon: "✅",
+                        current: 88,
+                        target: 95,
+                        unit: "%",
+                        milestones: [90, 92],
+                        additionalInfo: "Stability is key for Q2"
+                    },
+                    {
+                        name: "Defect Backlog",
+                        icon: "🐛",
+                        current: 12,
+                        target: 5,
+                        unit: "",
+                        milestones: [10, 8, 5],
+                        additionalInfo: "Striving for zero critical backlog",
+                        isReverse: true
+                    }
                 ]
             },
             q3_2026: {
