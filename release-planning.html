@@ -302,9 +302,9 @@
 
             const getMemberAlloc = (memberId) => {
                 const hpp = team.workingHoursPerDay || 7;
-                const devH = team.workItems.filter(i => i.assignedDev === memberId)
+                const devH = team.workItems.filter(i => i.isPlanned && i.assignedDev === memberId)
                     .reduce((s, i) => s + (parseInt(i.devHours)||0), 0);
-                const qaH  = team.workItems.filter(i => i.assignedQA  === memberId)
+                const qaH  = team.workItems.filter(i => i.isPlanned && i.assignedQA  === memberId)
                     .reduce((s, i) => s + (parseInt(i.qaHours)||0), 0);
                 // return days
                 return {
@@ -314,7 +314,7 @@
                 };
             };
 
-            const totalAllocatedHours = team.workItems.reduce((s, i) =>
+            const totalAllocatedHours = team.workItems.filter(i => i.isPlanned).reduce((s, i) =>
                 s + (parseInt(i.devHours)||0) + (parseInt(i.qaHours)||0), 0);
             const totalAllocated = +((totalAllocatedHours / (team.workingHoursPerDay || 7)).toFixed(1));
 
@@ -322,7 +322,7 @@
             // Work type totals in days
             const hpp = team.workingHoursPerDay || 7;
             const workTypeTotals = ['feature','techdebt','adhoc','bug'].reduce((acc, wt) => {
-                const hrs = team.workItems.filter(i => i.workType === wt)
+                const hrs = team.workItems.filter(i => i.isPlanned && i.workType === wt)
                     .reduce((s, i) => s + (parseInt(i.devHours)||0) + (parseInt(i.qaHours)||0), 0);
                 acc[wt] = +(hrs / hpp).toFixed(1);  // store as days
                 return acc;
@@ -1243,10 +1243,10 @@
                                                     <td className="py-1.5">Total</td>
                                                     <td className="py-1.5 text-center">{totalCapacity}d</td>
                                                     <td className="py-1.5 text-center text-blue-600">
-                                                        {+((team.workItems.reduce((s,i)=>s+(parseInt(i.devHours)||0),0))/(team.workingHoursPerDay||7)).toFixed(1)}d
+                                                        {+((team.workItems.filter(i=>i.isPlanned).reduce((s,i)=>s+(parseInt(i.devHours)||0),0))/(team.workingHoursPerDay||7)).toFixed(1)}d
                                                     </td>
                                                     <td className="py-1.5 text-center text-purple-600">
-                                                        {+((team.workItems.reduce((s,i)=>s+(parseInt(i.qaHours)||0),0))/(team.workingHoursPerDay||7)).toFixed(1)}d
+                                                        {+((team.workItems.filter(i=>i.isPlanned).reduce((s,i)=>s+(parseInt(i.qaHours)||0),0))/(team.workingHoursPerDay||7)).toFixed(1)}d
                                                     </td>
                                                     <td colSpan={2}>
                                                         <ProgressBar value={totalAllocated} max={totalCapacity}
