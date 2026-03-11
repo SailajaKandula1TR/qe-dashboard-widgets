@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>QE Key Enablers</title>
     <style>
         * {
@@ -117,48 +120,6 @@
             font-weight: 600;
             color: #2c3e50;
             margin: 0;
-        }
-
-        .taas-stats {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 15px 0;
-            text-align: center;
-        }
-
-        .taas-stats .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
-        }
-
-        .taas-stats .stat-label {
-            font-weight: 500;
-            opacity: 0.9;
-        }
-
-        .taas-stats .stat-value {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-
-        .progress-bar {
-            background: rgba(255, 255, 255, 0.2);
-            height: 8px;
-            border-radius: 4px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: rgba(255, 255, 255, 0.8);
-            height: 100%;
-            border-radius: 4px;
-            width: 91.66%;
-            transition: width 0.3s ease;
         }
 
         .enabler-list {
@@ -284,57 +245,6 @@
 
         <div class="content">
             <div class="enablers-grid">
-                <!-- TAAS Card -->
-                <div class="enabler-card">
-                    <div class="card-content">
-                        <div class="enabler-header">
-                            <div class="enabler-icon automation-icon">TA</div>
-                            <h3 class="enabler-title">TAAS (Test Automation as a Service)</h3>
-                        </div>
-                        
-                        <div class="taas-stats">
-                            <div class="stat-row">
-                                <span class="stat-label">Total Target:</span>
-                                <span class="stat-value">1,200</span>
-                            </div>
-                            <div class="stat-row">
-                                <span class="stat-label">Total Automated:</span>
-                                <span class="stat-value">1,200</span>
-                            </div>
-                            <div class="stat-row">
-                                <span class="stat-label">Coverage:</span>
-                                <span class="stat-value">100%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-buttons" style="text-align: center;">
-                        <a href="" id="taas-details-link" target="_blank" style="display: inline-block; background: #2c3e50; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 12px rgba(44, 62, 80, 0.3); transition: all 0.3s ease; border: 2px solid #34495e;" onmouseover="this.style.background='#34495e'; this.style.transform='translateY(-2px)';" onmouseout="this.style.background='#2c3e50'; this.style.transform='translateY(0)';">📊 View TAAS Details</a>
-                    </div>
-                </div>
-
-                <!-- Progress Trackers Card -->
-                <div class="enabler-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: 3px solid #4a5568; box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);">
-                    <div class="card-content">
-                        <div class="enabler-header" style="border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
-                            <div class="enabler-icon tracking-icon">PT</div>
-                            <h3 class="enabler-title" style="color: white;">Progress Trackers</h3>
-                        </div>
-                    </div>
-                    
-                    <div class="card-buttons" style="padding: 20px;">
-                        <div style="margin-bottom: 15px;">
-                            <a href="" id="automation-dashboard-link" target="_blank" style="display: block; width: 100%; background: rgba(255, 255, 255, 0.2); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3); text-align: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(0)';">🚀 Automation Dashboard</a>
-                        </div>
-                        <div>
-                            <a href="" id="metric-portal-link" target="_blank" style="display: block; width: 100%; background: rgba(255, 255, 255, 0.2); color: white; padding: 12px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); transition: all 0.3s ease; border: 2px solid rgba(255, 255, 255, 0.3); text-align: center;" onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='translateY(0)';">📈 Metric Portal</a>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- AI Usage Tools Card -->
                 <div class="enabler-card">
                     <div class="card-content">
@@ -419,19 +329,13 @@
     <script>
         // CONFIGURATION SECTION - Update links here
         const CONFIG = {
-            TAAS_DETAILS_URL: 'https://trten.sharepoint.com/:x:/r/sites/HighQModernizationProgram/SiteAssets/SitePages/Page(1)/512984323SHA.xlsx?d=wd534a3b464f54798859061228fb194a2&csf=1&web=1&e=yA4vtj',
-            HIGHQ_RCA_DOCUMENTS_URL: 'https://trten.sharepoint.com/:f:/r/sites/HighQModernizationProgram/Shared%20Documents/HighQ%20RCA%20Documents?csf=1&web=1&e=rSOcV9',
-            AUTOMATION_DASHBOARD_URL: 'https://tr-legal.visualstudio.com/HighQ%20Tech/_dashboards/dashboard/e31403d5-25ce-4dff-826b-3c47e76b0c2c',
-            METRIC_PORTAL_URL: 'https://lab1metricsportal.highq.com/'
+            HIGHQ_RCA_DOCUMENTS_URL: 'https://trten.sharepoint.com/:f:/r/sites/HighQModernizationProgram/Shared%20Documents/HighQ%20RCA%20Documents?csf=1&web=1&e=rSOcV9'
         };
 
         // Add some interactive animations
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize all links from CONFIG
-            document.getElementById('taas-details-link').href = CONFIG.TAAS_DETAILS_URL;
             document.getElementById('highq-rca-link').href = CONFIG.HIGHQ_RCA_DOCUMENTS_URL;
-            document.getElementById('automation-dashboard-link').href = CONFIG.AUTOMATION_DASHBOARD_URL;
-            document.getElementById('metric-portal-link').href = CONFIG.METRIC_PORTAL_URL;
             
             const cards = document.querySelectorAll('.enabler-card');
             
@@ -447,21 +351,7 @@
                     }, 100);
                 }, index * 100);
             });
-
-            // Animate progress bar
-            setTimeout(() => {
-                const progressFill = document.querySelector('.progress-fill');
-                if (progressFill) {
-                    progressFill.style.width = '0%';
-                    setTimeout(() => {
-                        progressFill.style.width = '91.66%';
-                    }, 500);
-                }
-            }, 1000);
         });
     </script>
 </body>
 </html>
-
-
-
