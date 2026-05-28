@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QA Governance — Feature Sign-off Checklist</title>
+<style>
+:root{
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --color-text-primary:#2C2C2A;
+  --color-text-secondary:#5F5E5A;
+  --color-text-tertiary:#888780;
+  --color-background-primary:#FFFFFF;
+  --color-background-secondary:#F9F8F5;
+  --color-border-secondary:#D3D1C7;
+  --color-border-tertiary:#E8E6DE;
+  --border-radius-md:6px;
+  --border-radius-lg:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);background:#F5F4F0;color:var(--color-text-primary);min-height:100vh;padding:24px}
+.page{max-width:900px;margin:0 auto;padding:1rem 0 2rem}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}
+.toolbar-left{display:flex;flex-direction:column;gap:2px}
+.toolbar-title{font-size:16px;font-weight:600;color:var(--color-text-primary)}
+.toolbar-sub{font-size:12px;color:var(--color-text-secondary)}
+.toolbar-right{display:flex;gap:8px}
+.btn-export{display:flex;align-items:center;gap:6px;background:#1D9E75;color:#fff;border:none;padding:8px 16px;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer}
+.btn-export:hover{background:#0F6E56}
+.btn-add-section{display:flex;align-items:center;gap:6px;background:#185FA5;color:#fff;border:none;padding:8px 16px;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer}
+.btn-add-section:hover{background:#0D4A82}
+.header-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.header-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.field-group{display:flex;flex-direction:column;gap:4px}
+.field-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em}
+.field-input{font-size:13px;padding:6px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.field-input:focus{outline:none;box-shadow:0 0 0 2px #9FE1CB}
+.outcome-row{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:0.5px solid var(--color-border-tertiary)}
+.outcome-lbl{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
+.outcome-btn{padding:5px 18px;border-radius:var(--border-radius-md);font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid transparent;transition:all 0.15s}
+.ob-pass{background:#E1F5EE;color:#0F6E56;border-color:#9FE1CB}
+.ob-pass.active,.ob-pass:hover{background:#9FE1CB;border-color:#1D9E75}
+.ob-fail{background:#FCEBEB;color:#A32D2D;border-color:#F7C1C1}
+.ob-fail.active,.ob-fail:hover{background:#F7C1C1;border-color:#A32D2D}
+.section{margin-bottom:10px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.sec-hdr{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sec-hdr-teal{background:#E1F5EE}
+.sec-hdr-blue{background:#E6F1FB}
+.sec-hdr-purple{background:#EEEDFE}
+.sec-hdr-gray{background:#F1EFE8}
+.sec-title-edit{font-size:12px;font-weight:600;background:transparent;border:none;color:var(--color-text-primary);flex:1;padding:2px 4px}
+.sec-title-edit:focus{outline:none;background:rgba(255,255,255,0.6);border-radius:4px}
+.sec-del{background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);font-size:13px;padding:2px 6px;border-radius:4px;display:flex;align-items:center}
+.sec-del:hover{color:#A32D2D;background:#FCEBEB}
+.item-row{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);transition:background 0.1s}
+.item-row:last-child{border-bottom:none}
+.item-row:hover{background:var(--color-background-secondary)}
+.item-row:hover .item-del{opacity:1}
+.item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.item-lbl-edit{font-size:13px;color:var(--color-text-primary);background:transparent;border:none;width:100%;padding:2px 4px;line-height:1.4;font-family:var(--font-sans)}
+.item-lbl-edit:focus{outline:none;background:var(--color-background-secondary);border-radius:3px}
+.item-note-edit{font-size:11px;color:var(--color-text-secondary);background:transparent;border:none;width:100%;padding:2px 4px;line-height:1.4;font-family:var(--font-sans)}
+.item-note-edit:focus{outline:none;background:var(--color-background-secondary);border-radius:3px}
+.item-comment{font-size:11px;color:var(--color-text-secondary);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);width:100%;padding:4px 8px;line-height:1.4;font-family:var(--font-sans);border-radius:4px;resize:none;min-height:28px}
+.item-comment:focus{outline:none;box-shadow:0 0 0 2px #9FE1CB;background:#fff}
+.item-status{display:flex;gap:4px;align-items:center;flex-shrink:0}
+.status-btn{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1.5px solid transparent;text-transform:uppercase;letter-spacing:0.03em;transition:all 0.12s}
+.sb-pass{background:#E1F5EE;color:#0F6E56;border-color:#C8EAD9}
+.sb-pass.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.sb-fail{background:#FCEBEB;color:#A32D2D;border-color:#F7D4D4}
+.sb-fail.active{background:#D32F2F;color:#fff;border-color:#D32F2F}
+.sb-na{background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7}
+.sb-na.active{background:#5F5E5A;color:#fff;border-color:#5F5E5A}
+.owner-pill{font-size:10px;font-weight:500;padding:3px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;cursor:pointer;border:none}
+.op-teal{background:#E1F5EE;color:#0F6E56}
+.op-purple{background:#EEEDFE;color:#3C3489}
+.op-blue{background:#E6F1FB;color:#185FA5}
+.item-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);font-size:13px;padding:2px 4px;border-radius:4px;align-self:center;flex-shrink:0;transition:opacity 0.15s}
+.item-del:hover{color:#A32D2D;background:#FCEBEB}
+.add-item-btn{display:flex;align-items:center;gap:5px;width:100%;padding:7px 14px;background:none;border:none;border-top:0.5px dashed var(--color-border-tertiary);font-size:12px;color:var(--color-text-tertiary);cursor:pointer;text-align:left}
+.add-item-btn:hover{color:var(--color-text-secondary);background:var(--color-background-secondary)}
+.summary-bar{display:flex;gap:16px;padding:10px 16px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+.summary-stat{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500}
+.stat-pass{color:#0F6E56}
+.stat-fail{color:#A32D2D}
+.stat-na{color:#5F5E5A}
+.stat-pending{color:#185FA5}
+@media(max-width:640px){.header-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="toolbar-title">QA Governance — Feature Sign-off Checklist</span>
+      <span class="toolbar-sub">Click text to edit · Click owner to cycle · Set Pass/Fail/NA per item · Add comments · Hover to delete</span>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn-add-section" onclick="addSection()">&#43; Add Section</button>
+      <button class="btn-export" onclick="exportPDF()">&#8595; Download PDF</button>
+    </div>
+  </div>
+
+  <div class="header-card">
+    <div class="header-grid">
+      <div class="field-group">
+        <label class="field-label">Feature / PBI</label>
+        <input class="field-input" id="f-feature" type="text" placeholder="e.g. PBI-1234 — Search redesign">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Reviewer name</label>
+        <input class="field-input" id="f-reviewer" type="text" placeholder="Your name">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Review date</label>
+        <input class="field-input" id="f-date" type="date">
+      </div>
+    </div>
+    <div class="outcome-row">
+      <span class="outcome-lbl">Overall Outcome</span>
+      <button class="outcome-btn ob-pass" id="btn-pass" onclick="setOutcome('pass')">&#10003; Pass</button>
+      <button class="outcome-btn ob-fail" id="btn-fail" onclick="setOutcome('fail')">&#10007; Fail</button>
+      <span id="outcome-note" style="font-size:12px;color:var(--color-text-tertiary);margin-left:6px"></span>
+    </div>
+  </div>
+
+  <div class="summary-bar" id="summary-bar"></div>
+  <div id="checklist-root"></div>
+</div>
+
+<script>
+const OWNERS=['QA Team','Sailaja','Sastry','Anusha','KK','Manos','Gobi'];
+const OWNER_KIND={'QA Team':'teal','Sailaja':'teal','Sastry':'purple','Anusha':'blue','KK':'teal','Manos':'teal','Gobi':'teal'};
+const SEC_COLORS=['teal','blue','purple','gray'];
+let UID=100;
+
+const data=[
+  {id:'s1',title:'1. Test Coverage',color:'teal',items:[
+    {id:'i1',label:'Test cases written for all acceptance criteria',note:'Every AC must have at least one corresponding test case',owner:'QA Team',status:'',comment:''},
+    {id:'i2',label:'Edge cases and negative scenarios covered',note:'Boundary values, invalid inputs, error states included',owner:'QA Team',status:'',comment:''},
+    {id:'i3',label:'Regression impact assessed and coverage updated',note:'Identify and add/update cases affected by this change',owner:'QA Team',status:'',comment:''},
+    {id:'i4',label:'Semantic coverage report reviewed — no gaps flagged',note:'Generated via GitHub Action; coverage % meets threshold',owner:'QA Team',status:'',comment:''},
+  ]},
+  {id:'s2',title:'2. ADO Hygiene',color:'blue',items:[
+    {id:'i5',label:'Duplicate test cases identified and removed',note:'Run deduplication check from QA report; no duplicates remaining',owner:'QA Team',status:'',comment:''},
+    {id:'i6',label:'Function and Subfunction fields populated',note:'Required ADO fields — must not be empty',owner:'QA Team',status:'',comment:''},
+    {id:'i7',label:'Area path and Team name set correctly',note:'Must reflect the correct team and product area',owner:'QA Team',status:'',comment:''},
+    {id:'i8',label:'Test Suite assigned and correctly structured',note:'Test cases must be inside the appropriate suite',owner:'QA Team',status:'',comment:''},
+    {id:'i9',label:'Test Automation Status field updated',note:'Set to Automated, Manual, or Planned as applicable',owner:'QA Team',status:'',comment:''},
+    {id:'i10',label:'Test cases linked to feature / PBIs',note:'All cases must be traceable to their parent work item',owner:'QA Team',status:'',comment:''},
+  ]},
+  {id:'s3',title:'3. Test Plan',color:'purple',items:[
+    {id:'i11',label:'Feature is mentioned in the test plan',note:'Test plan entry exists with scope, approach, and environment',owner:'QA Team',status:'',comment:''},
+    {id:'i12',label:'Test plan references all associated test suites',note:'Suites and cases are linked within the plan',owner:'QA Team',status:'',comment:''},
+    {id:'i13',label:'In-scope and out-of-scope items documented',note:'Clearly stated what is and is not being tested',owner:'QA Team',status:'',comment:''},
+  ]},
+  {id:'s4',title:'4. Test Automation',color:'purple',items:[
+    {id:'i14',label:'Automatable test cases have been automated',note:'Use test case agent suggestions as baseline — no backlog left unaddressed',owner:'QA Team',status:'',comment:''},
+    {id:'i15',label:'Automated test coverage meets agreed threshold',note:'Check coverage % in QA report before sign-off',owner:'QA Team',status:'',comment:''},
+    {id:'i16',label:'New automated tests added to the correct suite in ADO',note:'Suite must reflect the feature and team',owner:'QA Team',status:'',comment:''},
+  ]},
+  {id:'s5',title:'5. Automated Test Stability',color:'teal',items:[
+    {id:'i17',label:'Automated tests pass for 3 consecutive days',note:'No flakiness — consistent green across all runs',owner:'QA Team',status:'',comment:''},
+    {id:'i18',label:'Flaky tests identified and resolved or quarantined',note:'No unresolved flaky tests blocking the suite',owner:'QA Team',status:'',comment:''},
+  ]},
+  {id:'s6',title:'6. Sign-off Outcome',color:'gray',items:[
+    {id:'i21',label:'QA report attached or linked in ADO',note:'Final report generated and referenced on the work item',owner:'QA Team',status:'',comment:''},
+    {id:'i22',label:'All defects raised, triaged, and dispositioned',note:'No open critical/high bugs — lower severity acknowledged',owner:'QA Team',status:'',comment:''},
+    {id:'i23',label:'Sign-off outcome recorded in test plan',note:'Mark as Pass or Fail with date and reviewer name',owner:'QA Team',status:'',comment:''},
+    {id:'i24',label:'PM notified — sign-off handed over',note:'Minimum 3-day buffer maintained before PM sign-off',owner:'QA Team',status:'',comment:''},
+  ]},
+];
+
+let outcome='';
+
+function setOutcome(val){
+  outcome=val;
+  document.getElementById('btn-pass').classList.toggle('active',val==='pass');
+  document.getElementById('btn-fail').classList.toggle('active',val==='fail');
+  const d=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('outcome-note').textContent=val?`Marked ${val.toUpperCase()} — ${d}`:'';
+}
+
+function setItemStatus(iid,status){
+  for(const sec of data){
+    const item=sec.items.find(i=>i.id===iid);
+    if(item){
+      item.status=item.status===status?'':status;
+      render();
+      return;
+    }
+  }
+}
+
+function syncComment(iid,val){
+  for(const sec of data){
+    const item=sec.items.find(i=>i.id===iid);
+    if(item){item.comment=val;return;}
+  }
+}
+
+function deleteSection(sid){
+  const idx=data.findIndex(s=>s.id===sid);
+  if(idx>-1){data.splice(idx,1);render();}
+}
+
+function deleteItem(iid){
+  for(const sec of data){
+    const idx=sec.items.findIndex(i=>i.id===iid);
+    if(idx>-1){sec.items.splice(idx,1);render();return;}
+  }
+}
+
+function addSection(){
+  const newId='s'+(++UID);
+  const color=SEC_COLORS[data.length%SEC_COLORS.length];
+  data.push({id:newId,title:'New Section',color:color,items:[]});
+  render();
+  setTimeout(()=>{
+    const el=document.getElementById('stitle-'+newId);
+    if(el){el.focus();el.select();}
+  },50);
+}
+
+function addItem(sid){
+  const sec=data.find(s=>s.id===sid);
+  if(!sec)return;
+  const newId='i'+(++UID);
+  sec.items.push({id:newId,label:'New checklist item',note:'Add guidance note here',owner:'QA Team',status:'',comment:''});
+  render();
+  setTimeout(()=>{
+    const el=document.getElementById('lbl-'+newId);
+    if(el){el.focus();el.select();}
+  },50);
+}
+
+function cycleOwner(iid){
+  for(const sec of data){
+    const item=sec.items.find(i=>i.id===iid);
+    if(item){
+      item.owner=OWNERS[(OWNERS.indexOf(item.owner)+1)%OWNERS.length];
+      render();
+      return;
+    }
+  }
+}
+
+function syncField(iid,field,val){
+  for(const sec of data){
+    const item=sec.items.find(i=>i.id===iid);
+    if(item){item[field]=val;return;}
+  }
+}
+
+function syncSecTitle(sid,val){
+  const sec=data.find(s=>s.id===sid);
+  if(sec)sec.title=val;
+}
+
+function updateSummary(){
+  let pass=0,fail=0,na=0,pending=0;
+  for(const sec of data){
+    for(const item of sec.items){
+      if(item.status==='pass')pass++;
+      else if(item.status==='fail')fail++;
+      else if(item.status==='na')na++;
+      else pending++;
+    }
+  }
+  const total=pass+fail+na+pending;
+  document.getElementById('summary-bar').innerHTML=`
+    <span class="summary-stat stat-pass">&#10003; Pass: ${pass}</span>
+    <span class="summary-stat stat-fail">&#10007; Fail: ${fail}</span>
+    <span class="summary-stat stat-na">&#8212; N/A: ${na}</span>
+    <span class="summary-stat stat-pending">&#9711; Pending: ${pending}</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--color-text-tertiary)">Total: ${total} items</span>
+  `;
+}
+
+function render(){
+  const root=document.getElementById('checklist-root');
+  root.innerHTML=data.map(sec=>`
+    <div class="section">
+      <div class="sec-hdr sec-hdr-${sec.color}">
+        <span style="font-size:14px">&#128203;</span>
+        <input class="sec-title-edit" id="stitle-${sec.id}" value="${esc(sec.title)}" onchange="syncSecTitle('${sec.id}',this.value)" placeholder="Section title">
+        <button class="sec-del" onclick="deleteSection('${sec.id}')" title="Delete entire section">
+          &#128465;
+        </button>
+      </div>
+      ${sec.items.map(item=>`
+        <div class="item-row" id="row-${item.id}">
+          <div class="item-body">
+            <input class="item-lbl-edit" id="lbl-${item.id}" value="${esc(item.label)}" oninput="syncField('${item.id}','label',this.value)" placeholder="Item label">
+            <input class="item-note-edit" value="${esc(item.note)}" oninput="syncField('${item.id}','note',this.value)" placeholder="Guidance note (optional)">
+            <textarea class="item-comment" rows="1" placeholder="Add comment..." oninput="syncComment('${item.id}',this.value);this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(item.comment)}</textarea>
+          </div>
+          <div class="item-status">
+            <button class="status-btn sb-pass ${item.status==='pass'?'active':''}" onclick="setItemStatus('${item.id}','pass')">Pass</button>
+            <button class="status-btn sb-fail ${item.status==='fail'?'active':''}" onclick="setItemStatus('${item.id}','fail')">Fail</button>
+            <button class="status-btn sb-na ${item.status==='na'?'active':''}" onclick="setItemStatus('${item.id}','na')">N/A</button>
+          </div>
+          <button class="owner-pill op-${OWNER_KIND[item.owner]||'teal'}" onclick="cycleOwner('${item.id}')" title="Click to cycle owner">${esc(item.owner)}</button>
+          <button class="item-del" onclick="deleteItem('${item.id}')" title="Remove this item">
+            &#128465;
+          </button>
+        </div>
+      `).join('')}
+      <button class="add-item-btn" onclick="addItem('${sec.id}')">
+        &#43; Add item
+      </button>
+    </div>
+  `).join('');
+  updateSummary();
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function getVal(id){return document.getElementById(id)?.value||'';}
+
+function exportPDF(){
+  if(!window.jspdf){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>exportPDF();
+    s.onerror=()=>alert('Could not load PDF library. Please check your internet connection.');
+    document.head.appendChild(s);
+    return;
+  }
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const ML=14,MR=14,PW=210,CW=PW-ML-MR;
+  let y=16;
+
+  const C={
+    tealDark:[15,110,86],tealLight:[225,245,238],tealMid:[29,158,117],
+    purpleDark:[60,52,137],purpleLight:[238,237,254],
+    blueDark:[24,95,165],blueLight:[230,241,251],
+    grayDark:[95,94,90],grayLight:[241,239,232],
+    border:[211,209,199],textPri:[44,44,42],textSec:[95,94,90],textTer:[136,135,128],
+    white:[255,255,255],red:[163,45,45],redLight:[252,235,235],
+    passGreen:[29,158,117],failRed:[211,47,47],naGray:[95,94,90]
+  };
+  const SEC_BG={teal:C.tealLight,blue:C.blueLight,purple:C.purpleLight,gray:C.grayLight};
+
+  const sf=c=>doc.setFillColor(...c);
+  const sd=c=>doc.setDrawColor(...c);
+  const st=c=>doc.setTextColor(...c);
+  const hl=(yy,lw=0.2)=>{sd(C.border);doc.setLineWidth(lw);doc.line(ML,yy,ML+CW,yy);};
+  const chk=needed=>{if(y+needed>282){doc.addPage();y=16;}};
+
+  const feature=getVal('f-feature')||'—';
+  const reviewer=getVal('f-reviewer')||'—';
+  const dv=getVal('f-date');
+  const ds=dv?new Date(dv).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+
+  // Title
+  doc.setFont('helvetica','bold');doc.setFontSize(14);st(C.textPri);
+  doc.text('QA Governance — Feature Sign-off Checklist',ML,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(8);st(C.textSec);
+  doc.text('Complete all items. Set Pass/Fail/NA with comments before sign-off.',ML,y);y+=7;
+  hl(y);y+=5;
+
+  // Header card
+  sf(C.white);sd(C.border);doc.setLineWidth(0.3);doc.roundedRect(ML,y,CW,24,2,2,'FD');
+  const col=CW/3;
+  doc.setFont('helvetica','bold');doc.setFontSize(7);st(C.textSec);
+  doc.text('FEATURE / PBI',ML+4,y+4.5);doc.text('REVIEWER',ML+col+4,y+4.5);doc.text('DATE',ML+col*2+4,y+4.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);st(C.textPri);
+  doc.text(feature.substring(0,40),ML+4,y+10);doc.text(reviewer.substring(0,25),ML+col+4,y+10);doc.text(ds,ML+col*2+4,y+10);
+  hl(y+13,0.15);
+  doc.setFont('helvetica','bold');doc.setFontSize(7);st(C.textSec);doc.text('OUTCOME',ML+4,y+18);
+
+  const drawPill=(px,py,w,text,bgC,fgC,active)=>{
+    sf(active?fgC:bgC);doc.roundedRect(px,py,w,6,2,2,'F');
+    st(active?C.white:fgC);doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+    doc.text(text,px+w/2,py+4.2,{align:'center'});
+  };
+  drawPill(ML+28,y+15,18,'PASS',C.tealLight,C.tealMid,outcome==='pass');
+  drawPill(ML+50,y+15,18,'FAIL',C.redLight,C.red,outcome==='fail');
+  y+=30;
+
+  // Summary
+  let passC=0,failC=0,naC=0,pendC=0;
+  for(const sec of data)for(const it of sec.items){
+    if(it.status==='pass')passC++;else if(it.status==='fail')failC++;else if(it.status==='na')naC++;else pendC++;
+  }
+  sf([248,247,243]);doc.roundedRect(ML,y,CW,7,2,2,'F');
+  doc.setFont('helvetica','normal');doc.setFontSize(8);
+  st(C.tealDark);doc.text(`Pass: ${passC}`,ML+4,y+4.8);
+  st(C.red);doc.text(`Fail: ${failC}`,ML+30,y+4.8);
+  st(C.naGray);doc.text(`N/A: ${naC}`,ML+54,y+4.8);
+  st(C.blueDark);doc.text(`Pending: ${pendC}`,ML+74,y+4.8);
+  st(C.textTer);doc.text(`Total: ${passC+failC+naC+pendC}`,ML+CW-24,y+4.8);
+  y+=12;
+
+  // Sections
+  for(const sec of data){
+    if(!sec.items.length)continue;
+    chk(14);
+
+    // Section header
+    const bg=SEC_BG[sec.color]||C.grayLight;
+    sf(bg);sd(C.border);doc.setLineWidth(0.2);
+    doc.roundedRect(ML,y,CW,7,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);st(C.textPri);
+    doc.text(sec.title,ML+5,y+4.8);
+    y+=9;
+
+    // Items
+    for(const item of sec.items){
+      const labelLines=doc.splitTextToSize(item.label,CW-55);
+      const noteLines=item.note?doc.splitTextToSize(item.note,CW-55):[];
+      const commentLines=item.comment?doc.splitTextToSize('Comment: '+item.comment,CW-55):[];
+      const rh=6+(labelLines.length*3.8)+(noteLines.length*3.2)+(commentLines.length*3.2);
+      chk(rh);
+
+      sf(C.white);sd(C.border);doc.setLineWidth(0.1);
+      doc.rect(ML,y,CW,rh,'FD');
+
+      // Status badge
+      let statusText=item.status?item.status.toUpperCase():'—';
+      let statusColor=item.status==='pass'?C.passGreen:item.status==='fail'?C.failRed:item.status==='na'?C.naGray:C.textTer;
+      let statusBg=item.status==='pass'?C.tealLight:item.status==='fail'?C.redLight:item.status==='na'?C.grayLight:[245,244,240];
+      sf(statusBg);doc.roundedRect(ML+2,y+2,14,5,1.5,1.5,'F');
+      st(statusColor);doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+      doc.text(statusText,ML+9,y+5.5,{align:'center'});
+
+      // Label
+      doc.setFont('helvetica','normal');doc.setFontSize(9);st(C.textPri);
+      doc.text(labelLines,ML+19,y+5);
+
+      // Note
+      let ny=y+5+(labelLines.length*3.8);
+      if(noteLines.length){
+        doc.setFontSize(7.5);st(C.textSec);
+        doc.text(noteLines,ML+19,ny);
+        ny+=noteLines.length*3.2;
+      }
+
+      // Comment
+      if(commentLines.length){
+        doc.setFontSize(7.5);st([120,90,50]);
+        doc.text(commentLines,ML+19,ny);
+      }
+
+      // Owner pill
+      const ownerKind=OWNER_KIND[item.owner]||'teal';
+      const ownerBg=ownerKind==='teal'?C.tealLight:ownerKind==='purple'?C.purpleLight:C.blueLight;
+      const ownerFg=ownerKind==='teal'?C.tealDark:ownerKind==='purple'?C.purpleDark:C.blueDark;
+      sf(ownerBg);doc.roundedRect(ML+CW-26,y+2,24,5,2,2,'F');
+      st(ownerFg);doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+      doc.text(item.owner,ML+CW-14,y+5.5,{align:'center'});
+
+      y+=rh;
+    }
+    y+=6;
+  }
+
+  // Footer
+  chk(8);hl(y,0.3);y+=4;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);st(C.textTer);
+  doc.text('QA Governance Team  ·  Generated '+new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),ML,y);
+
+  const fn=feature!=='—'?`qa_signoff_${feature.replace(/[^a-zA-Z0-9]/g,'_').substring(0,40)}.pdf`:'qa_governance_signoff_checklist.pdf';
+  doc.save(fn);
+}
+
+render();
+document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
