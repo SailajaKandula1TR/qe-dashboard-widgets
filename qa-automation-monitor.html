@@ -1,0 +1,3104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Automation Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script crossorigin src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface2: #f1f5f9;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --accent: #6366f1;
+            --accent-light: #eef2ff;
+            --green: #10b981;
+            --green-light: #ecfdf5;
+            --amber: #f59e0b;
+            --amber-light: #fffbeb;
+            --red: #ef4444;
+            --red-light: #fef2f2;
+            --blue: #3b82f6;
+            --blue-light: #eff6ff;
+            --purple: #8b5cf6;
+            --purple-light: #f5f3ff;
+            --teal: #14b8a6;
+            --teal-light: #f0fdfa;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .metric-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 4px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover:not(:disabled) { background: #4f46e5; }
+        .btn-success { background: var(--green); color: white; }
+        .btn-success:hover:not(:disabled) { background: #059669; }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-danger:hover:not(:disabled) { background: #dc2626; }
+        .btn-outline {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover:not(:disabled) { background: var(--accent-light); border-color: var(--accent); }
+        .token-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Consolas', monospace;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .token-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-green { background: var(--green-light); color: #065f46; }
+        .badge-amber { background: var(--amber-light); color: #92400e; }
+        .badge-red { background: var(--red-light); color: #991b1b; }
+        .badge-blue { background: var(--blue-light); color: #1e40af; }
+        .badge-purple { background: var(--purple-light); color: #5b21b6; }
+        .progress-bar {
+            height: 6px;
+            background: var(--surface2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 28px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            min-width: 500px;
+        }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--surface2); padding: 10px 12px; text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: var(--surface2); }
+        .link { color: var(--accent); text-decoration: none; font-weight: 500; }
+        .link:hover { text-decoration: underline; }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .log-entry {
+            padding: 6px 12px;
+            font-size: 12px;
+            color: var(--muted);
+            border-left: 3px solid var(--accent);
+            margin-bottom: 4px;
+            background: var(--accent-light);
+            border-radius: 0 6px 6px 0;
+        }
+        .log-entry.active {
+            color: var(--text);
+            font-weight: 600;
+            border-left-color: var(--green);
+            background: var(--green-light);
+        }
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+        .tooltip-custom {
+            position: absolute;
+            background: var(--text);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 100;
+            max-width: 300px;
+        }
+        .improvement-positive { color: var(--green); }
+        .improvement-negative { color: var(--red); }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script id="qa-app-source" type="text/plain">
+        const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+        // ─── Config ───────────────────────────────────────────────────────────
+        const ADO_ORG = 'https://dev.azure.com/tr-legal';
+        const ADO_PROJECT = 'HighQ Tech';
+        const GH_REPO = 'tr/highq_collaborate_pw';
+        const GH_BRANCH = 'master';
+        const RP_HOST_DIRECT = 'https://lab1reportportal.highq.com';
+        // Use local proxy when served over http(s); use direct host for file:// pages.
+        const RP_HOST = window.location.protocol === 'file:'
+            ? RP_HOST_DIRECT
+            : window.location.origin + '/proxy/rp';
+        const RP_PROJECT = 'release';
+        const BATCH_SIZE = 200;
+        
+        // Runtime detection: switch to direct RP URL if proxy fails
+        let rpUseDirectHost = RP_HOST === RP_HOST_DIRECT;
+
+        // ─── HTTP Helpers ─────────────────────────────────────────────────────
+        async function adoFetch(url, adoToken, method = 'GET', body = null) {
+            const auth = btoa(':' + adoToken);
+            const opts = {
+                method,
+                headers: { 'Authorization': 'Basic ' + auth, 'Content-Type': 'application/json' }
+            };
+            if (body) opts.body = JSON.stringify(body);
+            const r = await fetch(url, opts);
+            if (!r.ok) throw new Error(`ADO HTTP ${r.status}: ${await r.text().catch(() => '')}`);
+            return r.json();
+        }
+
+        async function adoWiql(query, adoToken) {
+            const url = `${ADO_ORG}/${encodeURIComponent(ADO_PROJECT)}/_apis/wit/wiql?$top=19999&api-version=7.0`;
+            const r = await adoFetch(url, adoToken, 'POST', { query });
+            return (r.workItems || []).map(w => w.id);
+        }
+
+        // Paginated WIQL: fetches ALL IDs by splitting on System.Id ranges
+        async function adoWiqlAll(baseQuery, adoToken, log) {
+            let allIds = [];
+            let lastId = 0;
+            let page = 1;
+            while (true) {
+                const paginatedQuery = `${baseQuery} AND [System.Id] > ${lastId} ORDER BY [System.Id] ASC`;
+                const url = `${ADO_ORG}/${encodeURIComponent(ADO_PROJECT)}/_apis/wit/wiql?$top=19999&api-version=7.0`;
+                const r = await adoFetch(url, adoToken, 'POST', { query: paginatedQuery });
+                const ids = (r.workItems || []).map(w => w.id);
+                allIds = allIds.concat(ids);
+                if (log) log(`  Page ${page}: ${ids.length} items (total so far: ${allIds.length})`);
+                if (ids.length < 19999) break; // Last page
+                lastId = ids[ids.length - 1];
+                page++;
+            }
+            return allIds;
+        }
+
+        async function adoFetchWIs(ids, fields, adoToken) {
+            if (!ids.length) return [];
+            const all = [];
+            for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+                const batch = ids.slice(i, i + BATCH_SIZE);
+                const url = `${ADO_ORG}/${encodeURIComponent(ADO_PROJECT)}/_apis/wit/workitems?ids=${batch.join(',')}&fields=${fields}&api-version=7.0`;
+                const r = await adoFetch(url, adoToken);
+                all.push(...(r.value || []));
+            }
+            return all;
+        }
+
+        async function ghFetch(path, ghToken) {
+            const r = await fetch(`https://api.github.com/${path}`, {
+                headers: { 'Authorization': `token ${ghToken}`, 'User-Agent': 'qa-monitor-dashboard' }
+            });
+            if (!r.ok) throw new Error(`GitHub HTTP ${r.status}`);
+            return r.json();
+        }
+
+        async function rpFetch(path, rpToken) {
+            const host = rpUseDirectHost ? RP_HOST_DIRECT : RP_HOST;
+            const MAX_ATTEMPTS = 4;
+            let lastErr = null;
+            // Retry the same host on transient 5xx / network blips (intermittent DNS to RP is
+            // common). Browser CORS makes a direct-host fallback useless, so we don't switch hosts.
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                try {
+                    const r = await fetch(`${host}/api/v1/${RP_PROJECT}/${path}`, {
+                        headers: { 'Authorization': `Bearer ${rpToken}` }
+                    });
+                    if (!r.ok) {
+                        if (r.status >= 500 && attempt < MAX_ATTEMPTS) {
+                            await new Promise(res => setTimeout(res, 500 * attempt));
+                            continue;
+                        }
+                        throw new Error(`RP HTTP ${r.status}`);
+                    }
+                    return r.json();
+                } catch (e) {
+                    lastErr = e;
+                    if (attempt < MAX_ATTEMPTS) {
+                        await new Promise(res => setTimeout(res, 500 * attempt));
+                        continue;
+                    }
+                }
+            }
+            throw lastErr || new Error('RP fetch failed');
+        }
+
+        const f = (wi, n) => wi.fields?.[n] || '';
+        const TC_FIELDS = 'System.Id,System.Title,System.State,System.Tags,Microsoft.VSTS.TCM.TestSuiteType,Custom.AutomarionStatus,Custom.Function,Custom.SubFunction,System.CreatedDate,System.ChangedDate';
+
+        // ─── Main App ─────────────────────────────────────────────────────────
+        function QAMonitorApp() {
+            // Token state
+            const [adoToken, setAdoToken] = useState(() => localStorage.getItem('qam_adoToken') || '');
+            const [ghToken, setGhToken] = useState(() => localStorage.getItem('qam_ghToken') || '');
+            const [rpToken, setRpToken] = useState(() => localStorage.getItem('qam_rpToken') || '');
+            const [rpProject, setRpProject] = useState(() => localStorage.getItem('qam_rpProject') || RP_PROJECT);
+
+            // Supabase state
+            const [sbUrl, setSbUrl] = useState(() => localStorage.getItem('qam_sbUrl') || '');
+            const [sbKey, setSbKey] = useState(() => localStorage.getItem('qam_sbKey') || '');
+            const [sbConnected, setSbConnected] = useState(false);
+            const [syncStatus, setSyncStatus] = useState('idle');
+            const supabaseRef = useRef(null);
+
+            // Data state
+            const [data, setData] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('qam_data') || 'null'); } catch { return null; }
+            });
+            const [history, setHistory] = useState(() => {
+                try { return JSON.parse(localStorage.getItem('qam_history') || '[]'); } catch { return []; }
+            });
+
+            // UI state
+            const [generating, setGenerating] = useState(false);
+            const [logs, setLogs] = useState([]);
+            const [showConfig, setShowConfig] = useState(false);
+            const [showModal, setShowModal] = useState(null); // { type, data }
+            const [timelineYear, setTimelineYear] = useState(new Date().getFullYear().toString());
+            const [bugsYear, setBugsYear] = useState(new Date().getFullYear().toString());
+            const [stabilityYear, setStabilityYear] = useState(new Date().getFullYear().toString());
+            const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'bugs'
+            const abortRef = useRef(null);
+            const chartRefs = useRef({});
+
+            const compactDataForPersistence = (source) => {
+                if (!source) return source;
+                const compact = { ...source };
+                // Keep heavy arrays only in runtime memory; avoid quota/large payload failures.
+                delete compact.allTestCases;
+                if (Array.isArray(compact.functionData)) {
+                    compact.functionData = compact.functionData.map(fn => {
+                        const slim = { ...fn };
+                        delete slim.totalCases;
+                        delete slim.automatedCases;
+                        delete slim.regressionCases;
+                        delete slim.automatedRegressionCases;
+                        delete slim.rvtCases;
+                        delete slim.automatedRvtCases;
+                        delete slim.smokeCases;
+                        delete slim.automatedSmokeCases;
+                        return slim;
+                    });
+                }
+                return compact;
+            };
+
+            const parsePersistedPayload = (raw) => {
+                if (!raw) return { current: null, history: [] };
+                const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                if (parsed && typeof parsed === 'object' && ('current' in parsed || 'history' in parsed)) {
+                    return {
+                        current: parsed.current || null,
+                        history: Array.isArray(parsed.history) ? parsed.history : []
+                    };
+                }
+                return { current: parsed || null, history: [] };
+            };
+
+            // Persist tokens
+            useEffect(() => {
+                localStorage.setItem('qam_adoToken', adoToken);
+                localStorage.setItem('qam_ghToken', ghToken);
+                localStorage.setItem('qam_rpToken', rpToken);
+                localStorage.setItem('qam_rpProject', rpProject);
+            }, [adoToken, ghToken, rpToken, rpProject]);
+
+            // Persist data
+            useEffect(() => {
+                if (!data) return;
+                try {
+                    const compact = compactDataForPersistence(data);
+                    localStorage.setItem('qam_data', JSON.stringify(compact));
+                } catch (e) {
+                    console.warn('Failed to persist qam_data locally:', e?.message || e);
+                }
+            }, [data]);
+
+            useEffect(() => {
+                try {
+                    localStorage.setItem('qam_history', JSON.stringify(history));
+                } catch (e) {
+                    console.warn('Failed to persist qam_history locally:', e?.message || e);
+                }
+            }, [history]);
+
+            // ── Supabase ──────────────────────────────────────────────────────
+            useEffect(() => {
+                const savedUrl = localStorage.getItem('qam_sbUrl');
+                const savedKey = localStorage.getItem('qam_sbKey');
+                if (savedUrl && savedKey) {
+                    try {
+                        const client = supabase.createClient(savedUrl, savedKey);
+                        supabaseRef.current = client;
+                        // Load latest data
+                        client.from('qa_monitor_data').select('*').eq('key', 'latest').single()
+                            .then(({ data: row }) => {
+                                if (row && row.data) {
+                                    const parsed = parsePersistedPayload(row.data);
+                                    setData(parsed.current);
+                                    setHistory(parsed.history);
+                                }
+                                setSbConnected(true);
+                            })
+                            .catch(() => { setSbConnected(false); });
+                    } catch { setSbConnected(false); }
+                }
+            }, []);
+
+            const connectSupabase = async () => {
+                if (!sbUrl || !sbKey) return alert('Enter Supabase URL and anon key.');
+                try {
+                    const client = supabase.createClient(sbUrl, sbKey);
+                    const { data: existing, error } = await client
+                        .from('qa_monitor_data').select('*').eq('key', 'latest').single();
+                    if (error && error.code !== 'PGRST116') throw error;
+                    if (existing && existing.data) {
+                        const parsed = parsePersistedPayload(existing.data);
+                        setData(parsed.current);
+                        setHistory(parsed.history);
+                    }
+                    supabaseRef.current = client;
+                    setSbConnected(true);
+                    localStorage.setItem('qam_sbUrl', sbUrl);
+                    localStorage.setItem('qam_sbKey', sbKey);
+                    setSyncStatus('saved');
+                    setShowConfig(false);
+                    alert('Connected to Supabase!');
+                } catch (err) {
+                    alert('Supabase connection failed: ' + err.message);
+                }
+            };
+
+            const saveToSupabase = async (currentData, historyData) => {
+                if (!sbConnected || !supabaseRef.current) return;
+                setSyncStatus('saving');
+                try {
+                    const payload = JSON.stringify({ current: compactDataForPersistence(currentData), history: historyData });
+                    const { error } = await supabaseRef.current
+                        .from('qa_monitor_data')
+                        .upsert({ key: 'latest', data: payload, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+                    setSyncStatus(error ? 'error' : 'saved');
+                } catch { setSyncStatus('error'); }
+            };
+
+            // ── Log helper ────────────────────────────────────────────────────
+            const addLog = (msg) => setLogs(prev => [...prev, { msg, time: new Date().toLocaleTimeString(), active: true }]);
+            const finalizeLog = () => setLogs(prev => prev.map(l => ({ ...l, active: false })));
+
+            // ── Generate Data ─────────────────────────────────────────────────
+            // Individual section runners
+            const runSection = async (sectionName) => {
+                setGenerating(true);
+                setLogs([]);
+                abortRef.current = new AbortController();
+                const signal = abortRef.current.signal;
+                const check = () => { if (signal.aborted) throw new Error('STOPPED'); };
+
+                // Map section-based names to source-based actions
+                // coverage = ADO + GitHub, stability = RP launches, timeline = ADO revisions
+                // rpbugs = RP bug scan, openbugs = GitHub @open_bug tags
+                const needsAdo = ['coverage', 'timeline', 'counts', 'all'].includes(sectionName);
+                const needsGithub = ['coverage', 'openbugs', 'counts', 'all'].includes(sectionName);
+                const needsRP = ['stability', 'all'].includes(sectionName);
+                const needsRPBugs = ['rpbugs', 'all'].includes(sectionName);
+                const needsTimeline = ['timeline', 'all'].includes(sectionName);
+                let latestFunctionData = data?.functionData || null;
+
+                try {
+                    // Run GitHub first if both ADO and GitHub are needed, so mismatch logic uses fresh data
+                    let freshGhData = null;
+                    if (needsGithub) {
+                        if (!ghToken) { addLog('⚠ Skipping GitHub (no token).'); }
+                        else {
+                            addLog('▶ [GitHub] Scanning spec files for tags...');
+                            freshGhData = await scanGitHub(ghToken, check);
+                            addLog(`Scanned ${freshGhData.specFiles.length} spec files. Found ${freshGhData.taggedTests.requires_update.length} requires_update, ${freshGhData.taggedTests.open_bug.length} open_bug, ${freshGhData.taggedTests.runSequential.length} runSequential.`);
+
+                            const openBugsByFunction = buildOpenBugsByFunction(freshGhData.taggedTests.open_bug, freshGhData);
+
+                            setData(prev => ({
+                                ...(prev || {}),
+                                timestamp: new Date().toISOString(),
+                                requiresUpdate: freshGhData.taggedTests.requires_update,
+                                openBugs: freshGhData.taggedTests.open_bug,
+                                runSequential: freshGhData.taggedTests.runSequential,
+                                openBugsByFunction,
+                                authorMap: freshGhData.authorMap || {}
+                            }));
+                            addLog('✓ [GitHub] Section complete.');
+                        }
+                    }
+
+                    if (needsAdo) {
+                        if (!adoToken) throw new Error('ADO Token is required.');
+                        addLog('▶ [ADO] Fetching automated test cases...');
+                        const automatedBaseQuery = `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = 'HighQ Tech' AND [System.WorkItemType] = 'Test Case' AND [System.AreaPath] UNDER 'HighQ Tech\\COL' AND [System.State] <> 'Closed' AND [Custom.AutomarionStatus] IN ('Automated-UI','Automated-API')`;
+                        const automatedIds = await adoWiqlAll(automatedBaseQuery, adoToken, addLog);
+                        check();
+                        const automatedWIs = await adoFetchWIs(automatedIds, TC_FIELDS, adoToken);
+                        check();
+                        addLog(`Found ${automatedWIs.length} automated test cases.`);
+
+                        addLog('▶ [ADO] Fetching all active test cases (paginated)...');
+                        const allTcBaseQuery = `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = 'HighQ Tech' AND [System.WorkItemType] = 'Test Case' AND [System.AreaPath] UNDER 'HighQ Tech\\COL' AND [System.State] NOT IN ('Closed', 'Removed') AND [Microsoft.VSTS.TCM.TestSuiteType] IN ('Regression', 'Smoke', 'Release Validation Test')`;
+                        const allTcIds = await adoWiqlAll(allTcBaseQuery, adoToken, addLog);
+                        check();
+                        const allTcWIs = await adoFetchWIs(allTcIds, TC_FIELDS, adoToken);
+                        check();
+                        addLog(`Found ${allTcWIs.length} total active test cases.`);
+
+                        const githubAutomatedIds = new Set(
+                            freshGhData
+                                ? Array.from(freshGhData.testIdMap.keys())
+                                : (data?.automatedItems || []).map(item => item.id)
+                        );
+
+                        // Build function breakdown
+                        addLog('▶ [ADO] Building function-level breakdown...');
+                        const functionData = buildFunctionBreakdown(allTcWIs, githubAutomatedIds);
+                        latestFunctionData = functionData;
+
+                        // Compute mismatches using fresh GitHub data if available, otherwise fall back to previous state
+                        const ghData = freshGhData ? freshGhData : (data?.requiresUpdate ? {
+                            taggedTests: { requires_update: data.requiresUpdate, open_bug: data.openBugs || [], runSequential: data.runSequential || [] },
+                            specFiles: data?.specFiles || [], testIdMap: data?.testIdMap || new Map(), authorMap: data.authorMap || {}
+                        } : { specFiles: [], taggedTests: { requires_update: [], open_bug: [], runSequential: [] }, testIdMap: new Map(), authorMap: {} });
+                        const mismatches = computeMismatches(automatedWIs, allTcWIs, ghData);
+                        addLog(`Found ${mismatches.length} mismatches.`);
+
+                        const githubAutomatedItems = allTcWIs
+                            .filter(wi => githubAutomatedIds.has(wi.id))
+                            .map(wi => ({
+                                id: wi.id,
+                                title: f(wi, 'System.Title'),
+                                state: f(wi, 'System.State'),
+                                suiteType: f(wi, 'Microsoft.VSTS.TCM.TestSuiteType'),
+                                autoStatus: f(wi, 'Custom.AutomarionStatus'),
+                                function: f(wi, 'Custom.Function'),
+                                subFunction: f(wi, 'Custom.SubFunction')
+                            }));
+
+                        setData(prev => ({
+                            ...(prev || {}),
+                            timestamp: new Date().toISOString(),
+                            totalAutomated: githubAutomatedItems.length,
+                            allTestCases: allTcWIs.map(wi => ({
+                                id: wi.id,
+                                title: f(wi, 'System.Title') || '',
+                                state: f(wi, 'System.State') || '',
+                                suiteType: f(wi, 'Microsoft.VSTS.TCM.TestSuiteType') || '',
+                                autoStatus: f(wi, 'Custom.AutomarionStatus') || '',
+                                function: f(wi, 'Custom.Function') || 'Unassigned',
+                                subFunction: f(wi, 'Custom.SubFunction') || ''
+                            })),
+                            automatedItems: githubAutomatedItems,
+                            adoAutomatedItems: automatedWIs.map(wi => ({
+                                id: wi.id, title: f(wi, 'System.Title'), state: f(wi, 'System.State'),
+                                suiteType: f(wi, 'Microsoft.VSTS.TCM.TestSuiteType'),
+                                autoStatus: f(wi, 'Custom.AutomarionStatus'),
+                                function: f(wi, 'Custom.Function'), subFunction: f(wi, 'Custom.SubFunction')
+                            })),
+                            functionData, mismatches
+                        }));
+                        addLog('✓ [ADO] Section complete.');
+                    }
+
+                    if (needsRP) {
+                        if (!rpToken) { addLog('⚠ Skipping Report Portal (no token).'); }
+                        else {
+                            addLog('▶ [Report Portal] Fetching launches...');
+                            const rpLaunches = await fetchRPLaunches(rpToken, rpProject);
+                            addLog(`Fetched ${rpLaunches.length} launches.`);
+                            if (rpLaunches.length > 0) {
+                                addLog(`First 5 launch names: ${rpLaunches.slice(0, 5).map(l => `"${l.name}"`).join(', ')}`);
+                            }
+                            check();
+
+                            // Build stability
+                            addLog('▶ [Report Portal] Building stability data...');
+                            const stability = buildStabilityData(rpLaunches);
+
+                            const availableFunctionData = (latestFunctionData && latestFunctionData.length)
+                                ? latestFunctionData
+                                : null;
+                            // Flat id→function list that survives persistence (functionData case
+                            // arrays are stripped on save). Lets RP % work after a reload.
+                            const idFunctionFallback = [
+                                ...((data?.allTestCases) || []),
+                                ...((data?.automatedItems) || []),
+                                ...((data?.adoAutomatedItems) || [])
+                            ].filter(tc => tc && tc.id && tc.function);
+                            if (availableFunctionData || idFunctionFallback.length) {
+                                addLog('▶ [Report Portal] Computing module pass% from RP executions using ADO test IDs...');
+                                const moduleStability = await buildModuleStabilityFromRP(
+                                    rpToken,
+                                    rpProject,
+                                    rpLaunches,
+                                    availableFunctionData || [],
+                                    addLog,
+                                    check,
+                                    idFunctionFallback
+                                );
+                                if ((moduleStability.legacyByFunction || []).length > 0) {
+                                    stability.legacyByFunction = moduleStability.legacyByFunction;
+                                } else {
+                                    addLog('ℹ Legacy module ID matches were 0, keeping launch-name based RP mapping.');
+                                }
+
+                                if ((moduleStability.modernByFunction || []).length > 0) {
+                                    stability.modernByFunction = moduleStability.modernByFunction;
+                                } else {
+                                    addLog('ℹ Modern module ID matches were 0, keeping launch-name based RP mapping.');
+                                }
+                            } else {
+                                addLog('ℹ Module-level RP % needs Automation Coverage data. Run "Automation Coverage" first.');
+                            }
+
+                            addLog(`Legacy regression launches: ${stability.legacy.length}, Modern regression launches: ${stability.modern.length}`);
+                            addLog(`Legacy months: ${stability.legacyByMonth.length}, Modern months: ${stability.modernByMonth.length}`);
+
+                            setData(prev => ({
+                                ...(prev || {}),
+                                timestamp: new Date().toISOString(),
+                                rpLaunches: rpLaunches.map(l => ({
+                                    id: l.id, name: l.name, startTime: l.startTime,
+                                    endTime: l.endTime, status: l.status, statistics: l.statistics
+                                })),
+                                stability
+                            }));
+                            addLog('✓ [Report Portal] Section complete.');
+                        }
+                    }
+
+                    if (needsTimeline) {
+                        if (!adoToken) throw new Error('ADO Token is required for timeline.');
+                        // Use existing automated items from data or fetch fresh
+                        let ids = (data?.adoAutomatedItems || data?.automatedItems || []).map(i => i.id);
+                        if (!ids || ids.length === 0) {
+                            addLog('▶ [Timeline] Fetching automated test case IDs...');
+                            const automatedBaseQuery = `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = 'HighQ Tech' AND [System.WorkItemType] = 'Test Case' AND [System.AreaPath] UNDER 'HighQ Tech\\COL' AND [System.State] <> 'Closed' AND [Custom.AutomarionStatus] IN ('Automated-UI','Automated-API')`;
+                            ids = await adoWiqlAll(automatedBaseQuery, adoToken, addLog);
+                        }
+                        addLog(`▶ [Timeline] Fetching revisions for ${ids.length} work items...`);
+                        const automationDates = await fetchAutomationDates(ids, adoToken, addLog, check);
+                        const automationTimeline = buildAutomationTimeline(automationDates);
+                        addLog(`Timeline built: ${automationTimeline.length} months with data.`);
+
+                        setData(prev => ({
+                            ...(prev || {}),
+                            timestamp: new Date().toISOString(),
+                            automationTimeline
+                        }));
+                        addLog('✓ [Timeline] Section complete.');
+                    }
+
+                    if (needsRPBugs) {
+                        if (!adoToken) { addLog('⚠ Skipping Automation Bugs (no ADO token).'); }
+                        else {
+                            addLog('▶ [ADO Bugs] Fetching bugs with Issue Source = Automation or Testing Type = Automation...');
+                            const bugsFromAutomation = await fetchADOBugsFromAutomation(adoToken, addLog);
+                            const bugsByMonth = buildBugsByMonth(bugsFromAutomation);
+
+                            setData(prev => ({
+                                ...(prev || {}),
+                                timestamp: new Date().toISOString(),
+                                bugsByMonth,
+                                rpBugsFromAutomation: bugsFromAutomation
+                            }));
+                            addLog('✓ [ADO Bugs] Section complete.');
+                        }
+                    }
+
+                    finalizeLog();
+                    addLog('✅ Done!');
+
+                    // Save to Supabase after any section run
+                    setData(currentData => {
+                        if (currentData) {
+                            try {
+                                const compact = compactDataForPersistence(currentData);
+                                localStorage.setItem('qam_data', JSON.stringify(compact));
+                            } catch (e) {
+                                addLog(`⚠ Local cache save skipped: ${e?.name || 'storage error'}`);
+                            }
+                            const newHistory = [...history, { timestamp: currentData.timestamp, totalAutomated: currentData.totalAutomated || 0, mismatches: (currentData.mismatches || []).length, requiresUpdate: (currentData.requiresUpdate || []).reduce((s, e) => s + (e.ids?.length || 0), 0), openBugs: (currentData.openBugs || []).reduce((s, e) => s + (e.ids?.length || 0), 0), runSequential: (currentData.runSequential || []).reduce((s, e) => s + (e.ids?.length || 0), 0), bugsFoundByAutomation: (currentData.rpBugsFromAutomation || []).length }];
+                            setHistory(newHistory);
+                            saveToSupabase(currentData, newHistory);
+                        }
+                        return currentData;
+                    });
+
+                } catch (err) {
+                    if (err.message === 'STOPPED') {
+                        addLog('Generation stopped by user.');
+                    } else {
+                        addLog(`❌ Error: ${err.message}`);
+                    }
+                } finally {
+                    setGenerating(false);
+                    finalizeLog();
+                }
+            };
+
+            const generate = () => runSection('all');
+
+            const stopGeneration = () => {
+                if (abortRef.current) abortRef.current.abort();
+            };
+
+            // ── GitHub Scanner ────────────────────────────────────────────────
+            async function scanGitHub(token, check) {
+                const branch = await ghFetch(`repos/${GH_REPO}/branches/${GH_BRANCH}`, token);
+                check();
+                const tree = await ghFetch(`repos/${GH_REPO}/git/trees/${branch.commit.sha}?recursive=1`, token);
+                check();
+                const specFiles = (tree.tree || []).filter(t => t.type === 'blob' && /\.spec\.(ts|js)$/.test(t.path) && t.path.includes('e2e'));
+
+                const taggedTests = { requires_update: [], open_bug: [], runSequential: [] };
+                const testIdMap = new Map();
+                const authorMap = {};
+                const processedFiles = [];
+                const failedFiles = [];
+
+                for (let i = 0; i < specFiles.length; i += 5) {
+                    check();
+                    const batch = specFiles.slice(i, i + 5);
+                    const results = await Promise.all(batch.map(async (sf) => {
+                        try {
+                            const encoded = sf.path.split('/').map(s => encodeURIComponent(s)).join('/');
+                            const content = await ghFetch(`repos/${GH_REPO}/contents/${encoded}?ref=${GH_BRANCH}`, token);
+                            const code = atob(content.content);
+                            const fileName = sf.path.split('/').pop();
+                            const folder = sf.path.split('/').slice(0, -1).join('/');
+
+                            // Extract author tag
+                            const authorMatch = code.match(/@author[:\s]+([^\n\r]+)/i) || code.match(/\/\/\s*Author[:\s]+([^\n\r]+)/i);
+                            const author = authorMatch ? authorMatch[1].trim() : 'Unknown';
+
+                            // Extract test IDs and associate tags per-test using line proximity.
+                            // Test titles follow "<id> || <title>" but also appear as
+                            // "<id1> | <id2> || ..." (multiple ADO IDs) and "<id>-1 || ..."
+                            // (data-driven variants). We capture the whole quoted prefix up to
+                            // "||" and pull EVERY 5-8 digit ID out of it, so none are escaped.
+                            const codeLines = code.split('\n');
+                            const titleRegex = /["'`]([^"'`\n]*?)\|\|/g;
+                            let m;
+                            const ids = [];
+                            const idsWithOpenBug = [];
+                            const idsWithRequiresUpdate = [];
+                            const idsWithRunSequential = [];
+
+                            while ((m = titleRegex.exec(code)) !== null) {
+                                // Pull every standalone 5-8 digit ADO ID out of the title prefix.
+                                // The leading boundary [^A-Za-z0-9] (or start) prevents grabbing the
+                                // numeric part of letter-prefixed refs like "CD34636"/"AB766831"
+                                // (those are not ADO work-item IDs); the trailing (?![0-9]) keeps the
+                                // base of variant suffixes like "230162-1" → 230162. Pipe-separated
+                                // multi-ID titles "823064 | 823066 || ..." yield both IDs.
+                                const prefixIds = [...m[1].matchAll(/(?:^|[^A-Za-z0-9])(\d{5,8})(?![0-9])/g)].map(x => Number(x[1]));
+                                if (!prefixIds.length) continue;
+
+                                // Check surrounding context (50 lines before the match) for tags
+                                const lineIndex = code.substring(0, m.index).split('\n').length - 1;
+                                const contextStart = Math.max(0, lineIndex - 50);
+                                const contextBlock = codeLines.slice(contextStart, lineIndex + 5).join('\n');
+                                const hasOpenBug = /open_bug|@open_bug/i.test(contextBlock);
+                                const hasRequiresUpdate = /requires_update|@requires_update/i.test(contextBlock);
+                                const hasRunSequential = /runSequential|@runSequential|run_sequential/i.test(contextBlock);
+
+                                prefixIds.forEach(id => {
+                                    ids.push(id);
+                                    testIdMap.set(id, sf.path);
+                                    if (hasOpenBug) idsWithOpenBug.push(id);
+                                    if (hasRequiresUpdate) idsWithRequiresUpdate.push(id);
+                                    if (hasRunSequential) idsWithRunSequential.push(id);
+                                });
+                            }
+
+                            // Also check file-level tags (test.use at top of file applies to all)
+                            const fileTags = new Set();
+                            // Check test.use({ tag: [...] }) at file level (first 30 lines)
+                            const topLines = codeLines.slice(0, 30).join('\n');
+                            const useTagRe = /tag\s*:\s*\[([^\]]+)\]/g;
+                            let utm;
+                            while ((utm = useTagRe.exec(topLines)) !== null) {
+                                utm[1].split(',').forEach(t => {
+                                    const tag = t.replace(/['"`@\s]/g, '').toLowerCase();
+                                    fileTags.add(tag);
+                                });
+                            }
+
+                            // If file-level tag applies to all tests in the file
+                            const fileHasOpenBug = fileTags.has('open_bug');
+                            const fileHasRequiresUpdate = fileTags.has('requires_update');
+                            const fileHasRunSequential = fileTags.has('runsequential');
+
+                            // Build per-tag ID lists: use per-test detection, or file-level if tag is at top
+                            const openBugIds = fileHasOpenBug ? ids : idsWithOpenBug;
+                            const requiresUpdateIds = fileHasRequiresUpdate ? ids : idsWithRequiresUpdate;
+                            const runSequentialIds = fileHasRunSequential ? ids : idsWithRunSequential;
+
+                            const entry = { file: sf.path, fileName, folder, ids, author, tags: [...fileTags] };
+                            authorMap[sf.path] = author;
+
+                            if (requiresUpdateIds.length > 0) {
+                                taggedTests.requires_update.push({ ...entry, ids: requiresUpdateIds });
+                            }
+                            if (openBugIds.length > 0) {
+                                taggedTests.open_bug.push({ ...entry, ids: openBugIds });
+                            }
+                            if (runSequentialIds.length > 0) {
+                                taggedTests.runSequential.push({ ...entry, ids: runSequentialIds });
+                            }
+
+                            return entry;
+                        } catch (e) { failedFiles.push(sf.path); return null; }
+                    }));
+                    processedFiles.push(...results.filter(Boolean));
+                    if (i + 5 < specFiles.length) await new Promise(r => setTimeout(r, 80));
+                }
+
+                if (failedFiles.length) {
+                    addLog(`⚠️ ${failedFiles.length} spec file(s) failed to fetch from GitHub — their test IDs are NOT counted: ${failedFiles.slice(0, 8).join(', ')}${failedFiles.length > 8 ? ` …(+${failedFiles.length - 8} more)` : ''}`);
+                }
+
+                return { specFiles: processedFiles, taggedTests, testIdMap, authorMap, failedFiles };
+            }
+
+            // ── Compute Mismatches ────────────────────────────────────────────
+            function computeMismatches(automatedWIs, allTcWIs, ghData) {
+                const mismatches = [];
+                const adoMap = new Map();
+                allTcWIs.forEach(wi => adoMap.set(wi.id, wi));
+                const automatedSet = new Set(automatedWIs.map(wi => wi.id));
+
+                // Build set of IDs with requires_update tag in GitHub
+                const requiresUpdateIds = new Set();
+                ghData.taggedTests.requires_update.forEach(entry => {
+                    entry.ids.forEach(id => requiresUpdateIds.add(id));
+                });
+
+                // All IDs found in GitHub code
+                const inCodeIds = new Set();
+                ghData.specFiles.forEach(entry => {
+                    entry.ids.forEach(id => inCodeIds.add(id));
+                });
+
+                // Rule 1: ADO is Automated-UI/Automated-API, but code has requires_update tag
+                requiresUpdateIds.forEach(id => {
+                    const wi = adoMap.get(id);
+                    if (wi) {
+                        const autoStatus = f(wi, 'Custom.AutomarionStatus') || '';
+                        if (/Automated-UI|Automated-API/i.test(autoStatus)) {
+                            mismatches.push({
+                                id, title: f(wi, 'System.Title'),
+                                type: 'AUTOMATED_BUT_HAS_REQUIRES_UPDATE',
+                                detail: `ADO status is "${autoStatus}" but code has requires_update tag`,
+                                file: ghData.testIdMap?.get(id) || ''
+                            });
+                        }
+                    }
+                });
+
+                // Rule 2: ADO is "Requires Automation", but code does NOT have requires_update tag
+                inCodeIds.forEach(id => {
+                    if (requiresUpdateIds.has(id)) return;
+                    const wi = adoMap.get(id);
+                    if (wi) {
+                        const autoStatus = f(wi, 'Custom.AutomarionStatus') || '';
+                        if (/Requires Automation/i.test(autoStatus)) {
+                            mismatches.push({
+                                id, title: f(wi, 'System.Title'),
+                                type: 'REQUIRES_AUTOMATION_BUT_NO_TAG',
+                                detail: `ADO status is "Requires Automation" but code has no requires_update tag`,
+                                file: ghData.testIdMap?.get(id) || ''
+                            });
+                        }
+                    }
+                });
+
+                // Rule 3: ADO is Closed, but test is still in code
+                inCodeIds.forEach(id => {
+                    const wi = adoMap.get(id);
+                    if (!wi) {
+                        // Skip if test is in the automated set (exists in ADO, just not in allTcWIs due to filter)
+                        if (automatedSet.has(id)) return;
+                        mismatches.push({
+                            id, title: `TC ${id}`,
+                            type: 'IN_CODE_BUT_CLOSED',
+                            detail: 'ADO test case is Closed/missing but test is still in code',
+                            file: ghData.testIdMap?.get(id) || ''
+                        });
+                    }
+                });
+
+                // Rule 4: ADO is "TBD", but test is scripted in code
+                inCodeIds.forEach(id => {
+                    if (requiresUpdateIds.has(id)) return;
+                    const wi = adoMap.get(id);
+                    if (wi) {
+                        const autoStatus = f(wi, 'Custom.AutomarionStatus') || '';
+                        if (/^TBD$/i.test(autoStatus.trim())) {
+                            mismatches.push({
+                                id, title: f(wi, 'System.Title'),
+                                type: 'TBD_BUT_SCRIPTED',
+                                detail: `ADO status is "TBD" but test is scripted in code`,
+                                file: ghData.testIdMap?.get(id) || ''
+                            });
+                        }
+                    }
+                });
+
+                // Rule 5: ADO is "Manual", but test is scripted in code
+                inCodeIds.forEach(id => {
+                    if (requiresUpdateIds.has(id)) return;
+                    const wi = adoMap.get(id);
+                    if (wi) {
+                        const autoStatus = f(wi, 'Custom.AutomarionStatus') || '';
+                        if (/^Manual$/i.test(autoStatus.trim())) {
+                            mismatches.push({
+                                id, title: f(wi, 'System.Title'),
+                                type: 'MANUAL_BUT_SCRIPTED',
+                                detail: `ADO status is "Manual" but test is scripted in code`,
+                                file: ghData.testIdMap?.get(id) || ''
+                            });
+                        }
+                    }
+                });
+
+                return mismatches;
+            }
+
+            // ── Function Breakdown ────────────────────────────────────────────
+            function buildFunctionBreakdown(allTcWIs, githubAutomatedIds) {
+                const funcMap = {};
+                const automatedIds = githubAutomatedIds || new Set();
+
+                const toCaseRecord = (wi, funcName) => ({
+                    id: wi.id,
+                    title: f(wi, 'System.Title') || '',
+                    state: f(wi, 'System.State') || '',
+                    suiteType: f(wi, 'Microsoft.VSTS.TCM.TestSuiteType') || '',
+                    autoStatus: f(wi, 'Custom.AutomarionStatus') || '',
+                    function: funcName,
+                    subFunction: f(wi, 'Custom.SubFunction') || ''
+                });
+
+                allTcWIs.forEach(wi => {
+                    const func = f(wi, 'Custom.Function') || 'Unassigned';
+                    if (!funcMap[func]) {
+                        funcMap[func] = {
+                            total: 0,
+                            automated: 0,
+                            regression: 0,
+                            rvt: 0,
+                            smoke: 0,
+                            automatedRegression: 0,
+                            automatedRvt: 0,
+                            automatedSmoke: 0,
+                            totalCases: [],
+                            automatedCases: [],
+                            regressionCases: [],
+                            automatedRegressionCases: [],
+                            rvtCases: [],
+                            automatedRvtCases: [],
+                            smokeCases: [],
+                            automatedSmokeCases: []
+                        };
+                    }
+
+                    const caseRecord = toCaseRecord(wi, func);
+                    funcMap[func].total++;
+                    funcMap[func].totalCases.push(caseRecord);
+
+                    const suiteType = (f(wi, 'Microsoft.VSTS.TCM.TestSuiteType') || '').toLowerCase();
+                    const isAutomated = automatedIds.has(wi.id);
+
+                    if (suiteType.includes('regression')) {
+                        funcMap[func].regression++;
+                        funcMap[func].regressionCases.push(caseRecord);
+                        if (isAutomated) {
+                            funcMap[func].automatedRegression++;
+                            funcMap[func].automatedRegressionCases.push(caseRecord);
+                        }
+                    }
+                    if (suiteType.includes('release validation') || suiteType.includes('rvt')) {
+                        funcMap[func].rvt++;
+                        funcMap[func].rvtCases.push(caseRecord);
+                        if (isAutomated) {
+                            funcMap[func].automatedRvt++;
+                            funcMap[func].automatedRvtCases.push(caseRecord);
+                        }
+                    }
+                    if (suiteType.includes('smoke')) {
+                        funcMap[func].smoke++;
+                        funcMap[func].smokeCases.push(caseRecord);
+                        if (isAutomated) {
+                            funcMap[func].automatedSmoke++;
+                            funcMap[func].automatedSmokeCases.push(caseRecord);
+                        }
+                    }
+                    if (isAutomated) {
+                        funcMap[func].automated++;
+                        funcMap[func].automatedCases.push(caseRecord);
+                    }
+                });
+
+                return Object.entries(funcMap).map(([name, d]) => ({ name, ...d })).sort((a, b) => b.total - a.total);
+            }
+
+            // ── Report Portal ─────────────────────────────────────────────────
+            async function fetchRPLaunches(token, project) {
+                try {
+                    addLog(`🔍 Fetching RP launches for project: ${project}`);
+                    
+                    const all = [];
+                    let page = 1;
+                    let totalPages = 1;
+                    let host = rpUseDirectHost ? RP_HOST_DIRECT : RP_HOST;
+                    
+                    if (page === 1) {
+                        addLog(`   Using: ${rpUseDirectHost ? 'direct RP URL' : 'proxy'}`);
+                    }
+                    
+                    const MAX_PAGE_ATTEMPTS = 4;
+                    do {
+                        let url = `${host}/api/v1/${project}/launch?page.size=100&page.page=${page}&page.sort=startTime%2Cdesc`;
+                        if (page === 1) addLog(`   URL: ${url}`);
+
+                        // Retry the SAME host on transient 5xx / network blips. Falling back to
+                        // the direct RP host is pointless from a browser (CORS blocks it), so a
+                        // single proxy hiccup must not abort the whole fetch.
+                        let pageAttempt = 0;
+                        while (true) {
+                            pageAttempt++;
+                            try {
+                                const r = await fetch(url, {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                });
+                                if (page === 1 && pageAttempt === 1) addLog(`   Response status: ${r.status}`);
+
+                                if (!r.ok) {
+                                    if (r.status >= 500 && pageAttempt < MAX_PAGE_ATTEMPTS) {
+                                        addLog(`   ⚠️  Upstream ${r.status}, retrying page ${page} (${pageAttempt}/${MAX_PAGE_ATTEMPTS})...`);
+                                        await new Promise(res => setTimeout(res, 600 * pageAttempt));
+                                        continue;
+                                    }
+                                    throw new Error(`HTTP ${r.status}`);
+                                }
+
+                                const data = await r.json();
+                                const items = data.content || [];
+                                all.push(...items);
+                                if (page === 1) addLog(`   Got ${items.length} items on page 1, totalPages=${data?.page?.totalPages || 1}`);
+                                totalPages = data?.page?.totalPages || 1;
+                                page++;
+                                break;
+                            } catch (e) {
+                                if (pageAttempt < MAX_PAGE_ATTEMPTS) {
+                                    addLog(`   ⚠️  Network error (${e.message}), retrying page ${page} (${pageAttempt}/${MAX_PAGE_ATTEMPTS})...`);
+                                    await new Promise(res => setTimeout(res, 600 * pageAttempt));
+                                    continue;
+                                }
+                                throw new Error(`Request failed: ${e.message}`);
+                            }
+                        }
+                    } while (page <= totalPages);
+
+                    addLog(`✓ RP launches: ${all.length} total`);
+                    return all;
+                } catch (e) { 
+                    addLog(`❌ RP Error: ${e.message}`);
+                    return []; 
+                }
+            }
+
+            // Fetch failed test items with defects from RP launches
+            // Fetch bugs from ADO where Issue Source = Automation or Testing Type = Automation
+            async function fetchADOBugsFromAutomation(adoToken, log) {
+                const BUG_FIELDS = 'System.Id,System.Title,System.State,System.CreatedDate,System.ChangedDate,Microsoft.VSTS.Common.Severity,Microsoft.VSTS.Common.Priority,Custom.IssueSource,Custom.TestingType,System.AreaPath';
+                const bugQuery = `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = 'HighQ Tech' AND [System.WorkItemType] = 'Bug' AND [System.AreaPath] UNDER 'HighQ Tech\\COL' AND ([Custom.IssueSource] = 'Automation' OR [Custom.TestingType] = 'Automation')`;
+                const bugIds = await adoWiqlAll(bugQuery, adoToken, log);
+                if (log) log(`Found ${bugIds.length} bugs from automation.`);
+                if (bugIds.length === 0) return [];
+                const bugWIs = await adoFetchWIs(bugIds, BUG_FIELDS, adoToken);
+                const bugs = bugWIs.map(wi => {
+                    const createdDate = f(wi, 'System.CreatedDate') || '';
+                    const month = createdDate ? new Date(createdDate).toISOString().slice(0, 7) : 'Unknown';
+                    return {
+                        id: wi.id,
+                        title: f(wi, 'System.Title') || '',
+                        state: f(wi, 'System.State') || '',
+                        severity: f(wi, 'Microsoft.VSTS.Common.Severity') || '',
+                        priority: f(wi, 'Microsoft.VSTS.Common.Priority') || '',
+                        issueSource: f(wi, 'Custom.IssueSource') || '',
+                        testingType: f(wi, 'Custom.TestingType') || '',
+                        areaPath: f(wi, 'System.AreaPath') || '',
+                        createdDate,
+                        month
+                    };
+                });
+                if (log) log(`Processed ${bugs.length} automation bugs.`);
+                return bugs;
+            }
+
+            async function fetchRPBugsFromLaunches(token, project, launches, log) {
+                const bugsFound = [];
+                let processedCount = 0;
+                for (const launch of launches) {
+                    try {
+                        processedCount++;
+                        // Fetch items with Product Bug issue type (pb001) directly
+                        const url = `${RP_HOST}/api/v1/${project}/item?filter.eq.launchId=${launch.id}&filter.eq.hasStats=true&filter.eq.hasChildren=false&filter.in.issueType=pb001&page.size=300`;
+                        const r = await fetch(url, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (!r.ok) {
+                            if (log && processedCount <= 3) log(`  Launch ${launch.id} (${launch.name}): HTTP ${r.status}`);
+                            continue;
+                        }
+                        const data = await r.json();
+                        const items = data.content || [];
+
+                        if (items.length > 0 && log) {
+                            log(`  Launch "${launch.name}" (${launch.id}): ${items.length} product bug(s)`);
+                        }
+
+                        for (const item of items) {
+                            const issue = item.issue || {};
+                            // Extract bug ID from external system issues or from comment
+                            const bugId = issue.externalSystemIssues?.[0]?.ticketId ||
+                                          issue.externalSystemIssues?.[0]?.url?.match(/(\d{4,7})/)?.[1] ||
+                                          issue.comment?.match(/\b(?:BUG|DEFECT|ADO|AB#)[-:\s#]*(\d+)/i)?.[1] ||
+                                          issue.comment?.match(/\b(\d{4,7})\b/)?.[1] || null;
+                            bugsFound.push({
+                                launchId: launch.id,
+                                launchName: launch.name,
+                                launchDate: launch.startTime,
+                                itemId: item.id,
+                                itemName: item.name,
+                                issueType: issue.issueType || 'pb001',
+                                bugId: bugId,
+                                comment: issue.comment || '',
+                                externalUrl: issue.externalSystemIssues?.[0]?.url || '',
+                                month: launch.startTime ? new Date(launch.startTime).toISOString().slice(0, 7) : 'Unknown'
+                            });
+                        }
+                    } catch (e) {
+                        if (log && processedCount <= 3) log(`  Launch ${launch.id}: Error - ${e.message}`);
+                    }
+                }
+                if (log) log(`Processed ${processedCount} launches. Found ${bugsFound.length} product bugs total.`);
+                return bugsFound;
+            }
+
+            // Build bugs found by automation grouped by month
+            function buildBugsByMonth(rpBugs) {
+                const byMonth = {};
+                rpBugs.forEach(bug => {
+                    const month = bug.month || 'Unknown';
+                    if (!byMonth[month]) byMonth[month] = { count: 0, bugs: [] };
+                    byMonth[month].count++;
+                    byMonth[month].bugs.push(bug);
+                });
+                // Sort months chronologically
+                const sorted = Object.entries(byMonth)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([month, data]) => ({ month, ...data }));
+                return sorted;
+            }
+
+            // Build automation timeline from ADO work items (by Created Date)
+            // Fetch the date when each work item's AutomarionStatus was first set to Automated-UI/API
+            async function fetchAutomationDates(ids, adoToken, log, check) {
+                const results = []; // { id, automatedDate }
+                const PARALLEL = 10;
+
+                for (let i = 0; i < ids.length; i += PARALLEL) {
+                    check();
+                    const batch = ids.slice(i, i + PARALLEL);
+                    const batchResults = await Promise.all(batch.map(async (id) => {
+                        try {
+                            const auth = btoa(':' + adoToken);
+                            let skip = 0;
+                            const pageSize = 200;
+
+                            // Paginate through all updates to find when automation status was first set
+                            while (true) {
+                                const url = `${ADO_ORG}/${encodeURIComponent(ADO_PROJECT)}/_apis/wit/workitems/${id}/updates?$top=${pageSize}&$skip=${skip}&api-version=7.0`;
+                                const r = await fetch(url, {
+                                    headers: { 'Authorization': 'Basic ' + auth }
+                                });
+                                if (!r.ok) return { id, automatedDate: null };
+                                const data = await r.json();
+                                const updates = data.value || [];
+
+                                for (const update of updates) {
+                                    const field = update.fields?.['Custom.AutomarionStatus'];
+                                    if (field && /Automated-(UI|API)/i.test(field.newValue || '')) {
+                                        // Get the date from System.ChangedDate in this revision, or revisedDate
+                                        const changedDate = update.fields?.['System.ChangedDate']?.newValue;
+                                        const revDate = update.revisedDate;
+                                        // revisedDate of 9999 means it's the latest revision, use changedDate instead
+                                        const date = changedDate || (revDate && !revDate.startsWith('9999') ? revDate : null);
+                                        return { id, automatedDate: date };
+                                    }
+                                }
+
+                                // If fewer results than page size, we've reached the end
+                                if (updates.length < pageSize) break;
+                                skip += pageSize;
+                            }
+                            return { id, automatedDate: null };
+                        } catch {
+                            return { id, automatedDate: null };
+                        }
+                    }));
+                    results.push(...batchResults);
+
+                    if (log && (i % 100 === 0 || i + PARALLEL >= ids.length)) {
+                        log(`  Processed ${Math.min(i + PARALLEL, ids.length)}/${ids.length} work item revisions...`);
+                    }
+                    // Small delay to avoid rate-limiting
+                    if (i + PARALLEL < ids.length) await new Promise(r => setTimeout(r, 50));
+                }
+                return results;
+            }
+
+            function buildAutomationTimeline(automationDates) {
+                // Group by the month when automation status was first set
+                const byMonth = {};
+                (automationDates || []).forEach(item => {
+                    if (!item.automatedDate) return;
+                    const month = new Date(item.automatedDate).toISOString().slice(0, 7);
+                    if (!byMonth[month]) byMonth[month] = { count: 0, ids: [] };
+                    byMonth[month].count++;
+                    byMonth[month].ids.push({ id: item.id, date: item.automatedDate });
+                });
+
+                // Build sorted timeline with cumulative running total
+                const timeline = Object.keys(byMonth)
+                    .filter(m => m !== 'Unknown')
+                    .sort()
+                    .map(month => ({
+                        month,
+                        label: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                        newAutomated: byMonth[month].count,
+                        ids: byMonth[month].ids,
+                        cumulativeTotal: 0
+                    }));
+
+                // Compute cumulative as a running total
+                let running = 0;
+                timeline.forEach(t => {
+                    running += t.newAutomated;
+                    t.cumulativeTotal = running;
+                });
+
+                return timeline;
+            }
+
+            // ── Stability Data ────────────────────────────────────────────────
+            function buildStabilityData(launches) {
+                const legacy = [];
+                const modern = [];
+
+                launches.forEach(l => {
+                    const name = (l.name || '').toLowerCase();
+                    const isLegacy = name.includes('legacy');
+                    const isModern = name.includes('modern');
+                    if (!isLegacy && !isModern) return;
+
+                    // Fallback function extraction from launch name when module-level ID matching is unavailable.
+                    const funcMatch = name.match(/(?:regression[- ]?)?(.+?)[- ]\d+[- ](legacy|modern)/);
+                    const func = funcMatch ? funcMatch[1].replace(/[- ]+/g, ' ').trim() : 'unknown';
+
+                    const stats = l.statistics?.executions || {};
+                    const total = (stats.total || 0);
+                    const passed = (stats.passed || 0);
+                    const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+                    const entry = {
+                        id: l.id,
+                        name: l.name,
+                        func,
+                        date: l.startTime ? new Date(l.startTime).toLocaleDateString() : '',
+                        timestamp: l.startTime,
+                        month: l.startTime ? new Date(l.startTime).toISOString().slice(0, 7) : '',
+                        total, passed,
+                        failed: stats.failed || 0,
+                        skipped: stats.skipped || 0,
+                        passRate
+                    };
+
+                    if (isLegacy) legacy.push(entry);
+                    if (isModern) modern.push(entry);
+                });
+
+                // Sort by date ascending
+                legacy.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                modern.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+                // Aggregate by month
+                const legacyByMonth = aggregateByMonth(legacy);
+                const modernByMonth = aggregateByMonth(modern);
+
+                // Aggregate by function
+                const legacyByFunction = aggregateByFunction(legacy);
+                const modernByFunction = aggregateByFunction(modern);
+
+                return { legacy, modern, legacyByMonth, modernByMonth, legacyByFunction, modernByFunction };
+            }
+
+            function aggregateByFunction(launches) {
+                const funcMap = {};
+                launches.forEach(l => {
+                    const func = l.func || 'unknown';
+                    if (!funcMap[func]) funcMap[func] = { total: 0, passed: 0, failed: 0, skipped: 0, launches: 0, lastPassRate: 0 };
+                    funcMap[func].total += l.total;
+                    funcMap[func].passed += l.passed;
+                    funcMap[func].failed += l.failed;
+                    funcMap[func].skipped += l.skipped;
+                    funcMap[func].launches++;
+                    funcMap[func].lastPassRate = l.passRate; // last run's pass rate
+                });
+
+                return Object.entries(funcMap)
+                    .map(([func, d]) => ({
+                        func,
+                        total: d.total,
+                        passed: d.passed,
+                        failed: d.failed,
+                        skipped: d.skipped,
+                        launches: d.launches,
+                        passRate: d.total > 0 ? Math.round((d.passed / d.total) * 100) : 0,
+                        lastPassRate: d.lastPassRate
+                    }))
+                    .sort((a, b) => b.launches - a.launches);
+            }
+
+            function aggregateByMonth(launches) {
+                const monthMap = {};
+                launches.forEach(l => {
+                    const month = l.month;
+                    if (!month) return;
+                    if (!monthMap[month]) monthMap[month] = { total: 0, passed: 0, failed: 0, skipped: 0, launches: 0 };
+                    monthMap[month].total += l.total;
+                    monthMap[month].passed += l.passed;
+                    monthMap[month].failed += l.failed;
+                    monthMap[month].skipped += l.skipped;
+                    monthMap[month].launches++;
+                });
+
+                return Object.entries(monthMap)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([month, d]) => ({
+                        month,
+                        label: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                        total: d.total,
+                        passed: d.passed,
+                        failed: d.failed,
+                        skipped: d.skipped,
+                        launches: d.launches,
+                        passRate: d.total > 0 ? Math.round((d.passed / d.total) * 100) : 0
+                    }));
+            }
+
+            async function buildModuleStabilityFromRP(token, project, launches, functionData, log, check, idFunctionFallback) {
+                const idToModules = new Map();
+                const moduleStats = { legacy: {}, modern: {} };
+
+                const addIdModule = (id, moduleName) => {
+                    const key = String(id || '').trim();
+                    const mod = (moduleName || 'unassigned').trim().toLowerCase();
+                    if (!key) return;
+                    if (!idToModules.has(key)) idToModules.set(key, new Set());
+                    idToModules.get(key).add(mod);
+                };
+
+                // Preferred source: functionData with its full case arrays (available right after
+                // an Automation Coverage run in the same session).
+                (functionData || []).forEach(fn => {
+                    const moduleName = fn.name || 'unassigned';
+                    // Use totalCases when present so any test that ran in RP maps to its function,
+                    // regardless of automation flag; fall back to automatedCases.
+                    const cases = (fn.totalCases && fn.totalCases.length) ? fn.totalCases : (fn.automatedCases || []);
+                    cases.forEach(tc => addIdModule(tc.id, moduleName));
+                });
+
+                // Fallback: a flat [{id, function}] list that survives persistence
+                // (functionData case arrays are stripped before saving). This is what makes
+                // RP % work after a page reload without re-running Automation Coverage.
+                if (!idToModules.size && Array.isArray(idFunctionFallback)) {
+                    idFunctionFallback.forEach(item => addIdModule(item.id, item.function || item.func));
+                }
+
+                if (!idToModules.size) {
+                    if (log) log('ℹ No module test IDs available to match. Run "Automation Coverage" (ADO) first so RP executions can be mapped to functions.');
+                    return { legacyByFunction: [], modernByFunction: [] };
+                }
+
+                if (log) log(`📊 RP Diagnostics: ${idToModules.size} ADO IDs to match across functions`);
+
+                const relevantLaunches = (launches || []).filter(l => {
+                    const name = (l.name || '').toLowerCase();
+                    return name.includes('legacy') || name.includes('modern');
+                });
+
+                if (log) log(`🚀 Found ${relevantLaunches.length} legacy/modern launches to scan (filtered from ${launches.length} total)`);
+                relevantLaunches.slice(0, 5).forEach(l => {
+                    if (log) log(`  - "${l.name}" (ID: ${l.id})`);
+                });
+
+                // The ADO test-case ID for HighQ launches is the LEADING number of the test
+                // item name, e.g. "172389 || Verify ...", and is mirrored at the end of codeRef
+                // ("smoke/siteAdmin/CD31019.spec.ts/172389 || ...") and sometimes in testCaseId.
+                // We anchor on these specific locations instead of brute-forcing every 4-8 digit
+                // number out of the item JSON, which previously matched RP internal ids
+                // (id/launchId/parent), usernames in stack traces, and digits inside refs like
+                // "CD31019" — producing noise and false module matches.
+                const parseItemIds = (item) => {
+                    const ids = new Set();
+                    const addIfId = (v) => {
+                        const s = String(v == null ? '' : v).trim();
+                        if (/^\d{4,8}$/.test(s)) ids.add(s);
+                    };
+
+                    // Primary: leading numeric token in the test name.
+                    const leadName = (item?.name || '').match(/^\s*(\d{4,8})\b/);
+                    if (leadName) ids.add(leadName[1]);
+
+                    // Backup: numeric segment at the start or after a "/" in codeRef.
+                    const leadRef = (item?.codeRef || '').match(/(?:^|\/)(\d{4,8})\b/);
+                    if (leadRef) ids.add(leadRef[1]);
+
+                    // Secondary: explicit numeric identifier fields.
+                    addIfId(item?.testCaseId);
+                    addIfId(item?.caseId);
+                    addIfId(item?.number);
+
+                    return [...ids];
+                };
+
+                const statusBucket = (status) => {
+                    const s = (status || '').toLowerCase();
+                    if (s.includes('pass')) return 'passed';
+                    if (s.includes('fail')) return 'failed';
+                    if (s.includes('skip')) return 'skipped';
+                    return 'other';
+                };
+
+                for (const launch of relevantLaunches) {
+                    if (check) check();
+                    let launchItemsScanned = 0;
+                    let launchIdsExtracted = 0;
+                    let launchModuleMatches = 0;
+                    const launchUnmatchedIds = new Set();
+                    const launchName = (launch.name || '').toLowerCase();
+                    const mode = launchName.includes('legacy') ? 'legacy' : (launchName.includes('modern') ? 'modern' : null);
+                    if (!mode) continue;
+
+                    try {
+                        let page = 1;
+                        let totalPages = 1;
+
+                        do {
+                            // hasChildren=false → only leaf executions (the actual test steps),
+                            // not SUITE/TEST rollups, so each test is counted exactly once.
+                            const path = `item?filter.eq.launchId=${launch.id}&filter.eq.hasStats=true&filter.eq.hasChildren=false&page.size=300&page.page=${page}`;
+                            const result = await rpFetch(path, token);
+                            const items = result?.content || [];
+                            totalPages = result?.page?.totalPages || 1;
+
+                            items.forEach(item => {
+                                launchItemsScanned++;
+                                const itemIds = parseItemIds(item);
+                                if (!itemIds.length) return;
+                                launchIdsExtracted++;
+
+                                const matchedModules = new Set();
+                                itemIds.forEach(id => {
+                                    const mods = idToModules.get(String(id));
+                                    if (mods) mods.forEach(m => matchedModules.add(m));
+                                });
+                                if (!matchedModules.size) {
+                                    itemIds.forEach(id => launchUnmatchedIds.add(id));
+                                    return;
+                                }
+                                launchModuleMatches++;
+
+                                const bucket = statusBucket(item.status);
+                                matchedModules.forEach(moduleName => {
+                                    if (!moduleStats[mode][moduleName]) {
+                                        moduleStats[mode][moduleName] = {
+                                            func: moduleName,
+                                            total: 0,
+                                            passed: 0,
+                                            failed: 0,
+                                            skipped: 0,
+                                            other: 0,
+                                            launches: new Set()
+                                        };
+                                    }
+
+                                    const stat = moduleStats[mode][moduleName];
+                                    stat.total++;
+                                    stat[bucket]++;
+                                    stat.launches.add(launch.id);
+                                });
+                            });
+
+                            page++;
+                        } while (page <= totalPages);
+                        if (log) {
+                            log(`  Launch ${mode} "${launch.name}": ${launchItemsScanned} executions, ${launchIdsExtracted} with ADO IDs, ${launchModuleMatches} matched to a function`);
+                            if (launchModuleMatches === 0 && launchUnmatchedIds.size > 0) {
+                                log(`    ⚠ 0 matched. Sample extracted IDs not in ADO coverage: ${[...launchUnmatchedIds].slice(0, 10).join(', ')}`);
+                            }
+                        }
+                    } catch (e) {
+                        if (log) log(`  RP item scan failed for launch ${launch.id}: ${e.message}`);
+                    }
+                }
+
+                const legacyCount = Object.keys(moduleStats.legacy).length;
+                const modernCount = Object.keys(moduleStats.modern).length;
+                if (log) log(`✓ RP ID matching complete: legacy=${legacyCount} modules, modern=${modernCount} modules`);
+
+                if (legacyCount === 0 && modernCount === 0 && log) {
+                    log(`⚠️ WARNING: Zero module matches. Check if RP test items contain ADO IDs (5-8 digits) in their payload.`);
+                }
+
+                const toRows = (mode) => Object.values(moduleStats[mode])
+                    .map(s => ({
+                        func: s.func,
+                        total: s.total,
+                        passed: s.passed,
+                        failed: s.failed,
+                        skipped: s.skipped,
+                        launches: s.launches.size,
+                        passRate: s.total > 0 ? Math.round((s.passed / s.total) * 100) : 0
+                    }))
+                    .sort((a, b) => b.total - a.total);
+
+                return {
+                    legacyByFunction: toRows('legacy'),
+                    modernByFunction: toRows('modern')
+                };
+            }
+
+            // ── Open Bugs by Function ─────────────────────────────────────────
+            function buildOpenBugsByFunction(openBugFiles, ghData) {
+                const byFunc = {};
+                openBugFiles.forEach(entry => {
+                    // Derive function from folder path
+                    const parts = entry.folder.split('/');
+                    const func = parts.find(p => !['e2e', 'tests', 'test', 'specs', 'spec', ''].includes(p.toLowerCase())) || 'Unknown';
+                    if (!byFunc[func]) byFunc[func] = [];
+                    byFunc[func].push(entry);
+                });
+                return byFunc;
+            }
+
+            // ── Improvement Calculator ────────────────────────────────────────
+            const getImprovement = useCallback(() => {
+                if (history.length < 2) return null;
+                const prev = history[history.length - 2];
+                const curr = history[history.length - 1];
+                return {
+                    automated: curr.totalAutomated - prev.totalAutomated,
+                    mismatches: curr.mismatches - prev.mismatches,
+                    requiresUpdate: curr.requiresUpdate - prev.requiresUpdate,
+                    openBugs: curr.openBugs - prev.openBugs,
+                    runSequential: curr.runSequential - prev.runSequential,
+                    prevTimestamp: prev.timestamp,
+                    currTimestamp: curr.timestamp
+                };
+            }, [history]);
+
+            // ── Section PDF Export ────────────────────────────────────────────
+            const exportSectionPDF = (sectionName) => {
+                if (!data) return;
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+                const M = 30;
+                let y = M;
+
+                // Header
+                doc.setFillColor(99, 102, 241);
+                doc.rect(0, 0, pageW, 40, 'F');
+                doc.setTextColor(255); doc.setFontSize(14); doc.setFont(undefined, 'bold');
+                doc.text(`QA Automation Monitor — ${sectionName}`, M, 26);
+                doc.setFontSize(9); doc.setFont(undefined, 'normal');
+                doc.text(`Generated: ${new Date().toLocaleString()}`, pageW - M, 26, { align: 'right' });
+                y = 60;
+                doc.setTextColor(30, 41, 59);
+
+                const addTable = (headers, rows, colWidths) => {
+                    doc.setFontSize(8);
+                    let x = M;
+                    doc.setFillColor(241, 245, 249);
+                    doc.rect(M, y - 10, colWidths.reduce((a, b) => a + b, 0), 14, 'F');
+                    doc.setFont(undefined, 'bold');
+                    headers.forEach((h, i) => { doc.text(h, x + 2, y); x += colWidths[i]; });
+                    y += 14; doc.setFont(undefined, 'normal');
+                    rows.forEach(row => {
+                        x = M;
+                        row.forEach((v, i) => { doc.text(String(v || ''), x + 2, y); x += colWidths[i]; });
+                        y += 12;
+                        if (y > 560) { doc.addPage(); y = M; }
+                    });
+                    y += 10;
+                };
+
+                if (sectionName === 'Function Level Automation Details') {
+                    const headers = ['Function', 'Total', 'Automated', 'Regression', 'Auto Reg', 'RVT', 'Auto RVT', 'Smoke', 'Auto Smoke', 'Auto%', 'RP Leg%', 'RP Mod%'];
+                    const colW = [90, 35, 50, 55, 50, 35, 50, 40, 55, 40, 50, 50];
+                    const rows = (data.functionData || []).map(fn => {
+                        const autoP = fn.total > 0 ? Math.round((fn.automated / fn.total) * 100) : 0;
+                        const fnLower = fn.name.toLowerCase();
+                        const rpL = (data?.stability?.legacyByFunction || []).find(r => r.func === fnLower || fnLower.includes(r.func) || r.func.includes(fnLower));
+                        const rpM = (data?.stability?.modernByFunction || []).find(r => r.func === fnLower || fnLower.includes(r.func) || r.func.includes(fnLower));
+                        return [fn.name, fn.total, fn.automated, fn.regression, fn.automatedRegression, fn.rvt, fn.automatedRvt, fn.smoke, fn.automatedSmoke, autoP + '%', rpL ? rpL.passRate + '%' : '—', rpM ? rpM.passRate + '%' : '—'];
+                    });
+                    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+                    doc.text('Function Level Automation Details', M, y); y += 18;
+                    addTable(headers, rows, colW);
+                }
+
+                if (sectionName === 'Regression Stability') {
+                    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+                    doc.text('Regression Stability — Monthly Pass Rates', M, y); y += 18;
+                    // Legacy
+                    doc.setFontSize(10); doc.setFont(undefined, 'bold');
+                    doc.text('Legacy', M, y); y += 14;
+                    const legHeaders = ['Month', 'Total Tests', 'Passed', 'Failed', 'Pass Rate', 'Launches'];
+                    const legW = [80, 60, 60, 60, 60, 50];
+                    const legRows = (data?.stability?.legacyByMonth || []).map(m => [m.label, m.total, m.passed, m.failed, m.passRate + '%', m.launches]);
+                    addTable(legHeaders, legRows, legW);
+                    // Modern
+                    doc.setFontSize(10); doc.setFont(undefined, 'bold');
+                    doc.text('Modern', M, y); y += 14;
+                    const modRows = (data?.stability?.modernByMonth || []).map(m => [m.label, m.total, m.passed, m.failed, m.passRate + '%', m.launches]);
+                    addTable(legHeaders, modRows, legW);
+                }
+
+                if (sectionName === 'Automation Timeline') {
+                    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+                    doc.text('Tests Automated by Timeline', M, y); y += 18;
+                    const headers = ['Month', 'New Automated', 'Cumulative Total'];
+                    const colW = [100, 80, 80];
+                    const rows = (data?.automationTimeline || []).map(t => [t.label, t.newAutomated, t.cumulativeTotal]);
+                    addTable(headers, rows, colW);
+                }
+
+                if (sectionName === 'Bugs by Automation') {
+                    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+                    doc.text('Bugs Found by Automation — Monthly', M, y); y += 18;
+                    const headers = ['Month', 'Bug Count', 'With Linked IDs'];
+                    const colW = [100, 60, 80];
+                    const rows = (data?.bugsByMonth || []).map(m => [
+                        new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+                        m.count,
+                        m.bugs.filter(b => b.bugId).length
+                    ]);
+                    addTable(headers, rows, colW);
+                    y += 10;
+                    // Detail table
+                    doc.setFontSize(10); doc.setFont(undefined, 'bold');
+                    doc.text('Recent Bug Details', M, y); y += 14;
+                    const dHeaders = ['Month', 'Test Name', 'Launch', 'Bug ID'];
+                    const dW = [60, 250, 200, 60];
+                    const dRows = (data?.rpBugsFromAutomation || []).slice(0, 50).map(b => [b.month, (b.itemName || '').slice(0, 50), (b.launchName || '').slice(0, 40), b.bugId || '—']);
+                    addTable(dHeaders, dRows, dW);
+                }
+
+                if (sectionName === 'Open Bugs by Function') {
+                    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+                    doc.text('Function Level Detail with Open Bugs', M, y); y += 18;
+                    const headers = ['Function', 'Bug Count', 'Sample Files'];
+                    const colW = [120, 60, 400];
+                    const rows = Object.entries(data?.openBugsByFunction || {}).map(([func, files]) => [func, files.length, files.slice(0, 3).map(f => f.fileName).join(', ')]);
+                    addTable(headers, rows, colW);
+                }
+
+                doc.save(`qa-monitor-${sectionName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+            };
+
+            // ── PDF Export ────────────────────────────────────────────────────
+            const exportPDF = () => {
+                if (!data) return;
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+                const M = 30;
+                let y = M;
+
+                // Header
+                doc.setFillColor(99, 102, 241);
+                doc.rect(0, 0, pageW, 40, 'F');
+                doc.setTextColor(255); doc.setFontSize(16); doc.setFont(undefined, 'bold');
+                doc.text('QA Automation Monitor Report', M, 26);
+                doc.setFontSize(9); doc.setFont(undefined, 'normal');
+                doc.text(`Generated: ${new Date(data.timestamp).toLocaleString()}`, pageW - M, 26, { align: 'right' });
+                y = 60;
+
+                // Summary
+                doc.setTextColor(30, 41, 59);
+                doc.setFontSize(12); doc.setFont(undefined, 'bold');
+                doc.text('Summary', M, y); y += 16;
+                doc.setFontSize(10); doc.setFont(undefined, 'normal');
+                doc.text(`Total Automated: ${data.totalAutomated}`, M, y); y += 14;
+                doc.text(`Mismatches: ${data.mismatches.length}`, M, y); y += 14;
+                doc.text(`Requires Update: ${data.requiresUpdate.length}`, M, y); y += 14;
+                doc.text(`Open Bugs: ${data.openBugs.length}`, M, y); y += 14;
+                doc.text(`Run Sequential: ${data.runSequential.length}`, M, y); y += 24;
+
+                // Function breakdown table
+                doc.setFontSize(12); doc.setFont(undefined, 'bold');
+                doc.text('Function Level Breakdown', M, y); y += 16;
+                doc.setFontSize(8); doc.setFont(undefined, 'normal');
+
+                const headers = ['Function', 'Total', 'Automated', 'Regression', 'Auto Reg', 'RVT', 'Auto RVT', 'Smoke', 'Auto Smoke', 'Pass Rate%', 'Auto%'];
+                const colW = [100, 40, 55, 60, 50, 40, 50, 40, 55, 55, 45];
+                let x = M;
+                doc.setFillColor(241, 245, 249);
+                doc.rect(M, y - 10, colW.reduce((a, b) => a + b, 0), 14, 'F');
+                doc.setFont(undefined, 'bold');
+                headers.forEach((h, i) => { doc.text(h, x + 2, y); x += colW[i]; });
+                y += 14; doc.setFont(undefined, 'normal');
+
+                (data.functionData || []).slice(0, 20).forEach(fn => {
+                    x = M;
+                    const autoP = fn.total > 0 ? Math.round((fn.automated / fn.total) * 100) : 0;
+                    const row = [fn.name, fn.total, fn.automated, fn.regression, fn.automatedRegression, fn.rvt, fn.automatedRvt, fn.smoke, fn.automatedSmoke, autoP + '%', autoP + '%'];
+                    row.forEach((v, i) => { doc.text(String(v), x + 2, y); x += colW[i]; });
+                    y += 12;
+                    if (y > 560) { doc.addPage(); y = M; }
+                });
+
+                doc.save('qa-automation-monitor.pdf');
+            };
+
+            // ── Render ────────────────────────────────────────────────────────
+            const improvement = getImprovement();
+            const functionMetricCaseMap = {
+                total: 'totalCases',
+                automated: 'automatedCases',
+                regression: 'regressionCases',
+                automatedRegression: 'automatedRegressionCases',
+                rvt: 'rvtCases',
+                automatedRvt: 'automatedRvtCases',
+                smoke: 'smokeCases',
+                automatedSmoke: 'automatedSmokeCases'
+            };
+
+            const openFunctionCaseModal = (fn, metricKey, metricLabel) => {
+                const caseList = getFunctionCaseList(fn, metricKey);
+                if (!caseList.length) {
+                    alert('Detailed test case list is not available in current snapshot. Run Automation Coverage or Run All to refresh.');
+                    return;
+                }
+                setShowModal({
+                    type: 'function_case_list',
+                    title: `${fn.name} - ${metricLabel} Test Cases`,
+                    data: caseList
+                });
+            };
+
+            const getFunctionCaseList = (fn, metricKey) => {
+                const listKey = functionMetricCaseMap[metricKey];
+                const storedList = listKey ? (fn?.[listKey] || []) : [];
+                if (storedList.length) return storedList;
+
+                const allCases = (data?.allTestCases || []).filter(tc => (tc.function || 'Unassigned') === fn?.name);
+                if (!allCases.length) return [];
+
+                const automatedIds = new Set((data?.automatedItems || []).map(item => item.id));
+                const isAutomated = (tc) => automatedIds.has(tc.id);
+                const isRegression = (tc) => (tc.suiteType || '').toLowerCase().includes('regression');
+                const isRvt = (tc) => {
+                    const suite = (tc.suiteType || '').toLowerCase();
+                    return suite.includes('release validation') || suite.includes('rvt');
+                };
+                const isSmoke = (tc) => (tc.suiteType || '').toLowerCase().includes('smoke');
+
+                switch (metricKey) {
+                    case 'total': return allCases;
+                    case 'automated': return allCases.filter(tc => isAutomated(tc));
+                    case 'regression': return allCases.filter(tc => isRegression(tc));
+                    case 'automatedRegression': return allCases.filter(tc => isRegression(tc) && isAutomated(tc));
+                    case 'rvt': return allCases.filter(tc => isRvt(tc));
+                    case 'automatedRvt': return allCases.filter(tc => isRvt(tc) && isAutomated(tc));
+                    case 'smoke': return allCases.filter(tc => isSmoke(tc));
+                    case 'automatedSmoke': return allCases.filter(tc => isSmoke(tc) && isAutomated(tc));
+                    default: return [];
+                }
+            };
+
+            const hasFunctionCaseList = (fn, metricKey) => {
+                const directCount = Number(fn?.[metricKey] || 0);
+                if (directCount > 0) return true;
+                return getFunctionCaseList(fn, metricKey).length > 0;
+            };
+
+            return (
+                <div className="min-h-screen pb-10">
+                    {/* Header */}
+                    <div className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+                        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-indigo-600 text-lg">⚡</span>
+                                </div>
+                                <h1 className="text-lg font-bold text-slate-800">QA Automation Monitor</h1>
+                                {data && <span className="text-xs text-slate-400 ml-2">Last: {new Date(data.timestamp).toLocaleString()}</span>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {/* Token Inputs */}
+                                <input type="password" placeholder="ADO Token" value={adoToken} onChange={e => setAdoToken(e.target.value)}
+                                    className="token-input w-28 text-xs" title="Azure DevOps PAT" />
+                                <input type="password" placeholder="GitHub Token" value={ghToken} onChange={e => setGhToken(e.target.value)}
+                                    className="token-input w-28 text-xs" title="GitHub PAT" />
+                                <input type="password" placeholder="RP Token" value={rpToken} onChange={e => setRpToken(e.target.value)}
+                                    className="token-input w-28 text-xs" title="Report Portal Token" />
+                                <input type="text" placeholder="RP Project" value={rpProject} onChange={e => setRpProject(e.target.value)}
+                                    className="token-input w-20 text-xs" title="Report Portal Project" />
+
+                                <button className="btn btn-primary" onClick={generate} disabled={generating}>
+                                    {generating ? '⏳ Running...' : '▶ Run All'}
+                                </button>
+                                <div style={{ position: 'relative', display: 'inline-block' }}>
+                                    <button className="btn btn-outline" disabled={generating} onClick={() => document.getElementById('section-menu').classList.toggle('hidden')}>
+                                        ▸ Run Section
+                                    </button>
+                                    <div id="section-menu" className="hidden" style={{ position: 'absolute', top: '100%', right: 0, zIndex: 100, marginTop: 4, background: 'white', border: '1px solid var(--border)', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: 220 }}>
+                                        <div style={{ padding: '6px 12px', fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9' }}>Overall</div>
+                                        <button className="btn" style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0 }} onClick={() => { document.getElementById('section-menu').classList.add('hidden'); runSection('counts'); }} disabled={generating}>
+                                            🔢 Overall Counts (ADO + GitHub)
+                                        </button>
+                                        <div style={{ padding: '6px 12px', fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', borderTop: '1px solid #f1f5f9' }}>Overview & Stability</div>
+                                        <button className="btn" style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0 }} onClick={() => { document.getElementById('section-menu').classList.add('hidden'); runSection('coverage'); }} disabled={generating}>
+                                            📊 Automation Coverage
+                                        </button>
+                                        <button className="btn" style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0 }} onClick={() => { document.getElementById('section-menu').classList.add('hidden'); runSection('stability'); }} disabled={generating}>
+                                            📈 Regression Stability
+                                        </button>
+                                        <button className="btn" style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0 }} onClick={() => { document.getElementById('section-menu').classList.add('hidden'); runSection('timeline'); }} disabled={generating}>
+                                            📅 Automation Timeline
+                                        </button>
+                                        <div style={{ padding: '6px 12px', fontSize: '10px', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', borderTop: '1px solid #f1f5f9' }}>Bugs & Defects</div>
+                                        <button className="btn" style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0 }} onClick={() => { document.getElementById('section-menu').classList.add('hidden'); runSection('rpbugs'); }} disabled={generating}>
+                                            🪲 Bugs Found by Automation
+                                        </button>
+                                        <button className="btn" style={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: 0 }} onClick={() => { document.getElementById('section-menu').classList.add('hidden'); runSection('openbugs'); }} disabled={generating}>
+                                            🐛 Open Bugs by Function
+                                        </button>
+                                    </div>
+                                </div>
+                                {generating && <button className="btn btn-danger" onClick={stopGeneration}>⏹ Stop</button>}
+                                <button className="btn btn-success" onClick={() => saveToSupabase(data, history)} disabled={!data || !sbConnected}>
+                                    💾 Save
+                                </button>
+                                <button className="btn btn-outline" onClick={exportPDF} disabled={!data}>📄 PDF</button>
+                                <button className="btn btn-outline" onClick={() => setShowConfig(true)}>⚙️</button>
+
+                                {/* Sync indicator */}
+                                {sbConnected && (
+                                    <span className={`text-xs font-medium ${syncStatus === 'saved' ? 'text-green-600' : syncStatus === 'saving' ? 'text-amber-500' : syncStatus === 'error' ? 'text-red-500' : 'text-slate-400'}`}>
+                                        {syncStatus === 'saved' ? '● Synced' : syncStatus === 'saving' ? '○ Saving...' : syncStatus === 'error' ? '● Error' : '○ Idle'}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-7xl mx-auto px-6 mt-6">
+                        {/* Generation Logs */}
+                        {logs.length > 0 && (
+                            <div className="card p-4 mb-6">
+                                <div className="text-xs font-semibold text-slate-500 uppercase mb-2">Generation Log</div>
+                                <div className="max-h-40 overflow-y-auto space-y-1">
+                                    {logs.map((l, i) => (
+                                        <div key={i} className={`log-entry ${l.active ? 'active' : ''}`}>
+                                            <span className="text-slate-400 mr-2">{l.time}</span>{l.msg}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Main Metrics - Always visible */}
+                        <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
+                            <button
+                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'overview' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                onClick={() => setActiveTab('overview')}
+                            >📊 Overview &amp; Stability</button>
+                            <button
+                                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'bugs' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                                onClick={() => setActiveTab('bugs')}
+                            >🪲 Bugs &amp; Defects</button>
+                        </div>
+
+                        {activeTab === 'overview' && (<React.Fragment>
+                        <div className="grid grid-cols-6 gap-4 mb-6">
+                            <MetricCard
+                                value={data ? data.totalAutomated : '—'}
+                                label="Total Automated"
+                                color="var(--accent)"
+                                bgColor="var(--accent-light)"
+                            />
+                            <MetricCard
+                                value={data ? data.mismatches.length : '—'}
+                                label="Mismatches"
+                                color="var(--amber)"
+                                bgColor="var(--amber-light)"
+                                onClick={data ? () => setShowModal({ type: 'mismatches', data: data.mismatches }) : undefined}
+                                linkText="Show"
+                            />
+                            <MetricCard
+                                value={data ? data.requiresUpdate.reduce((sum, e) => sum + (e.ids?.length || 0), 0) : '—'}
+                                label="requires_update"
+                                color="var(--purple)"
+                                bgColor="var(--purple-light)"
+                                onClick={data ? () => setShowModal({ type: 'requires_update', data: data.requiresUpdate }) : undefined}
+                                linkText="Show"
+                            />
+                            <MetricCard
+                                value={data ? data.openBugs.reduce((sum, e) => sum + (e.ids?.length || 0), 0) : '—'}
+                                label="bug ids"
+                                color="var(--red)"
+                                bgColor="var(--red-light)"
+                                onClick={data ? () => setShowModal({ type: 'open_bugs', data: data.openBugs }) : undefined}
+                                linkText="Show"
+                            />
+                            <MetricCard
+                                value={data ? data.runSequential.reduce((sum, e) => sum + (e.ids?.length || 0), 0) : '—'}
+                                label="runSequential"
+                                color="var(--teal)"
+                                bgColor="var(--teal-light)"
+                                onClick={data ? () => setShowModal({ type: 'runSequential', data: data.runSequential }) : undefined}
+                                linkText="Show"
+                            />
+                            <MetricCard
+                                value={data?.rpBugsFromAutomation ? data.rpBugsFromAutomation.length : '—'}
+                                label="Bugs by Automation"
+                                color="var(--red)"
+                                bgColor="var(--red-light)"
+                                onClick={data?.rpBugsFromAutomation?.length ? () => setShowModal({ type: 'bugs_by_automation', data: data.rpBugsFromAutomation }) : undefined}
+                                linkText={data?.rpBugsFromAutomation?.length ? "Show" : undefined}
+                            />
+                        </div>
+
+                        {/* Function Level Table - Always visible */}
+                        <div className="card p-5 mb-6">
+                            <div className="flex items-center justify-between">
+                                <div className="section-title" style={{ marginBottom: 0 }}>
+                                    <span>📊</span> Function Level Automation Details
+                                </div>
+                                <div className="flex gap-2">
+                                    <button className="btn btn-success text-xs" style={{ padding: '4px 10px' }} disabled={!data || !(data.functionData || []).length} onClick={() => {
+                                        let csv = 'Function,Total,Automated,Regression,Automated Regression,RVT,Automated RVT,Smoke,Automated Smoke,Automation%,RP Legacy%,RP Legacy Launches,RP Modern%,RP Modern Launches\n';
+                                        (data.functionData || []).forEach(fn => {
+                                            const autoP = fn.total > 0 ? Math.round((fn.automated / fn.total) * 100) : 0;
+                                            const fnLower = (fn.name || '').toLowerCase();
+                                            const rpLegacy = (data?.stability?.legacyByFunction || []).find(r => r.func === fnLower || fnLower.includes(r.func) || r.func.includes(fnLower));
+                                            const rpModern = (data?.stability?.modernByFunction || []).find(r => r.func === fnLower || fnLower.includes(r.func) || r.func.includes(fnLower));
+                                            csv += `"${(fn.name || '').replace(/"/g, '""')}",${fn.total || 0},${fn.automated || 0},${fn.regression || 0},${fn.automatedRegression || 0},${fn.rvt || 0},${fn.automatedRvt || 0},${fn.smoke || 0},${fn.automatedSmoke || 0},${autoP},${rpLegacy ? rpLegacy.passRate : ''},${rpLegacy ? rpLegacy.launches : ''},${rpModern ? rpModern.passRate : ''},${rpModern ? rpModern.launches : ''}\n`;
+                                        });
+                                        const blob = new Blob([csv], { type: 'text/csv' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `Function_Level_Automation_Details_${new Date().toISOString().slice(0, 10)}.csv`;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                    }}>⬇ Download CSV</button>
+                                    <button className="btn btn-outline text-xs" style={{ padding: '4px 10px' }} onClick={() => exportSectionPDF('Function Level Automation Details')} disabled={!data}>📄 PDF</button>
+                                </div>
+                            </div>
+                            <div className="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ background: '#f0f4ff' }}>Function</th>
+                                            <th style={{ background: '#f0f4ff' }}>Total</th>
+                                            <th style={{ background: '#f0f4ff' }}>Automated</th>
+                                            <th style={{ background: '#fef9f0' }}>Regression</th>
+                                            <th style={{ background: '#fef9f0' }}>Automated</th>
+                                            <th style={{ background: '#fef9f0' }}>RVT</th>
+                                            <th style={{ background: '#fef9f0' }}>Automated</th>
+                                            <th style={{ background: '#fef9f0' }}>Smoke</th>
+                                            <th style={{ background: '#fef9f0' }}>Automated</th>
+                                            <th style={{ background: '#f0fff4' }}>Automation%</th>
+                                            <th style={{ background: '#f0fff4' }}>RP Legacy%</th>
+                                            <th style={{ background: '#f0fff4' }}>RP Modern%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data && (data.functionData || []).map((fn, i) => {
+                                            const autoP = fn.total > 0 ? Math.round((fn.automated / fn.total) * 100) : 0;
+                                            // Match RP function pass rate by comparing lowercase names
+                                            const fnLower = fn.name.toLowerCase();
+                                            const rpLegacy = (data?.stability?.legacyByFunction || []).find(r => r.func === fnLower || fnLower.includes(r.func) || r.func.includes(fnLower));
+                                            const rpModern = (data?.stability?.modernByFunction || []).find(r => r.func === fnLower || fnLower.includes(r.func) || r.func.includes(fnLower));
+                                            return (
+                                                <tr key={i}>
+                                                    <td className="font-medium" style={{ background: '#f8faff' }}>{fn.name}</td>
+                                                    <td style={{ background: '#f8faff' }}>
+                                                        {hasFunctionCaseList(fn, 'total') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'total', 'Total'); }}>{fn.total} ↗</a>
+                                                        ) : (
+                                                            <span>{fn.total}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#f8faff' }}>
+                                                        {hasFunctionCaseList(fn, 'automated') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'automated', 'Automated'); }}><span className="badge badge-green">{fn.automated} ↗</span></a>
+                                                        ) : (
+                                                            <span className="badge badge-green">{fn.automated}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#fffdf8' }}>
+                                                        {hasFunctionCaseList(fn, 'regression') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'regression', 'Regression'); }}>{fn.regression} ↗</a>
+                                                        ) : (
+                                                            <span>{fn.regression}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#fffdf8' }}>
+                                                        {hasFunctionCaseList(fn, 'automatedRegression') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'automatedRegression', 'Automated Regression'); }}><span className="badge badge-blue">{fn.automatedRegression} ↗</span></a>
+                                                        ) : (
+                                                            <span className="badge badge-blue">{fn.automatedRegression}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#fffdf8' }}>
+                                                        {hasFunctionCaseList(fn, 'rvt') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'rvt', 'RVT'); }}>{fn.rvt} ↗</a>
+                                                        ) : (
+                                                            <span>{fn.rvt}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#fffdf8' }}>
+                                                        {hasFunctionCaseList(fn, 'automatedRvt') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'automatedRvt', 'Automated RVT'); }}><span className="badge badge-blue">{fn.automatedRvt} ↗</span></a>
+                                                        ) : (
+                                                            <span className="badge badge-blue">{fn.automatedRvt}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#fffdf8' }}>
+                                                        {hasFunctionCaseList(fn, 'smoke') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'smoke', 'Smoke'); }}>{fn.smoke} ↗</a>
+                                                        ) : (
+                                                            <span>{fn.smoke}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#fffdf8' }}>
+                                                        {hasFunctionCaseList(fn, 'automatedSmoke') ? (
+                                                            <a href="#" className="link" title="View test cases" onClick={e => { e.preventDefault(); openFunctionCaseModal(fn, 'automatedSmoke', 'Automated Smoke'); }}><span className="badge badge-blue">{fn.automatedSmoke} ↗</span></a>
+                                                        ) : (
+                                                            <span className="badge badge-blue">{fn.automatedSmoke}</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ background: '#f8fff8' }}>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="progress-bar flex-1">
+                                                                <div className="progress-fill" style={{ width: `${autoP}%`, background: autoP > 70 ? 'var(--green)' : autoP > 40 ? 'var(--amber)' : 'var(--red)' }}></div>
+                                                            </div>
+                                                            <span className="text-xs font-medium">{autoP}%</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ background: '#f8fff8' }}>
+                                                        {rpLegacy ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className={`text-xs font-semibold ${rpLegacy.passRate > 80 ? 'text-green-600' : rpLegacy.passRate > 60 ? 'text-amber-600' : 'text-red-600'}`}>{rpLegacy.passRate}%</span>
+                                                                <span className="text-xs text-slate-400">({rpLegacy.launches})</span>
+                                                            </div>
+                                                        ) : <span className="text-xs text-slate-400">—</span>}
+                                                    </td>
+                                                    <td style={{ background: '#f8fff8' }}>
+                                                        {rpModern ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className={`text-xs font-semibold ${rpModern.passRate > 80 ? 'text-green-600' : rpModern.passRate > 60 ? 'text-amber-600' : 'text-red-600'}`}>{rpModern.passRate}%</span>
+                                                                <span className="text-xs text-slate-400">({rpModern.launches})</span>
+                                                            </div>
+                                                        ) : <span className="text-xs text-slate-400">—</span>}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {data && (data.functionData || []).length > 0 && (() => {
+                                            const fns = data.functionData || [];
+                                            const sum = (k) => fns.reduce((acc, fn) => acc + (Number(fn[k]) || 0), 0);
+                                            const t = {
+                                                total: sum('total'),
+                                                automated: sum('automated'),
+                                                regression: sum('regression'),
+                                                automatedRegression: sum('automatedRegression'),
+                                                rvt: sum('rvt'),
+                                                automatedRvt: sum('automatedRvt'),
+                                                smoke: sum('smoke'),
+                                                automatedSmoke: sum('automatedSmoke')
+                                            };
+                                            const autoP = t.total > 0 ? Math.round((t.automated / t.total) * 100) : 0;
+                                            // Overall RP pass% = pass-weighted across all matched functions.
+                                            const overallRate = (rows) => {
+                                                const tot = (rows || []).reduce((a, r) => a + (Number(r.total) || 0), 0);
+                                                const pass = (rows || []).reduce((a, r) => a + (Number(r.passed) || 0), 0);
+                                                return tot > 0 ? Math.round((pass / tot) * 100) : null;
+                                            };
+                                            const legacyRate = overallRate(data?.stability?.legacyByFunction);
+                                            const modernRate = overallRate(data?.stability?.modernByFunction);
+                                            const cell = { fontWeight: 700, background: '#eef2ff', borderTop: '2px solid #c7d2fe' };
+                                            return (
+                                                <tr>
+                                                    <td style={cell}>TOTAL ({fns.length})</td>
+                                                    <td style={cell}>{t.total}</td>
+                                                    <td style={cell}>{t.automated}</td>
+                                                    <td style={cell}>{t.regression}</td>
+                                                    <td style={cell}>{t.automatedRegression}</td>
+                                                    <td style={cell}>{t.rvt}</td>
+                                                    <td style={cell}>{t.automatedRvt}</td>
+                                                    <td style={cell}>{t.smoke}</td>
+                                                    <td style={cell}>{t.automatedSmoke}</td>
+                                                    <td style={cell}>{autoP}%</td>
+                                                    <td style={cell}>{legacyRate == null ? '—' : `${legacyRate}%`}</td>
+                                                    <td style={cell}>{modernRate == null ? '—' : `${modernRate}%`}</td>
+                                                </tr>
+                                            );
+                                        })()}
+                                        {!data && (
+                                            <tr><td colSpan="12" className="text-center text-slate-400 py-8">Click Generate to populate data</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Stability Charts - Always visible */}
+                        <div className="card p-5 mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="section-title" style={{ marginBottom: 0 }}><span>📈</span> Regression Stability — Monthly</div>
+                                <div className="flex items-center gap-2">
+                                    <button className="btn btn-outline text-xs" style={{ padding: '4px 10px' }} onClick={() => exportSectionPDF('Regression Stability')} disabled={!data}>📄 PDF</button>
+                                    <select
+                                        value={stabilityYear}
+                                        onChange={e => setStabilityYear(e.target.value)}
+                                        className="token-input" style={{ width: 'auto', padding: '6px 12px', fontSize: '13px' }}
+                                    >
+                                    <option value="all">All Years</option>
+                                    {(() => {
+                                        const years = new Set();
+                                        (data?.stability?.legacyByMonth || []).forEach(m => { if (m.month) years.add(m.month.slice(0, 4)); });
+                                        (data?.stability?.modernByMonth || []).forEach(m => { if (m.month) years.add(m.month.slice(0, 4)); });
+                                        if (years.size === 0) { const y = new Date().getFullYear(); years.add(String(y)); years.add(String(y - 1)); }
+                                        return [...years].sort().reverse().map(y => <option key={y} value={y}>{y}</option>);
+                                    })()}
+                                    </select>
+                                </div>
+                            </div>
+                            {(() => {
+                                const filteredLegacy = (data?.stability?.legacyByMonth || []).filter(m => stabilityYear === 'all' || m.month?.startsWith(stabilityYear));
+                                const filteredModern = (data?.stability?.modernByMonth || []).filter(m => stabilityYear === 'all' || m.month?.startsWith(stabilityYear));
+                                // Filter function-level data by year too
+                                const legacyLaunches = (data?.stability?.legacy || []).filter(l => stabilityYear === 'all' || l.month?.startsWith(stabilityYear));
+                                const modernLaunches = (data?.stability?.modern || []).filter(l => stabilityYear === 'all' || l.month?.startsWith(stabilityYear));
+                                const filteredLegacyByFunc = aggregateByFunction(legacyLaunches);
+                                const filteredModernByFunc = aggregateByFunction(modernLaunches);
+                                return (
+                                    <React.Fragment>
+                                        <div className="grid grid-cols-2 gap-6 mb-6">
+                                            <div>
+                                                <div className="text-sm font-semibold text-slate-700 mb-2">Legacy</div>
+                                                <StabilityChart monthlyData={filteredLegacy} type="legacy" />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-semibold text-slate-700 mb-2">Modern</div>
+                                                <StabilityChart monthlyData={filteredModern} type="modern" />
+                                            </div>
+                                        </div>
+                                    </React.Fragment>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Improvement Section - Always visible */}
+                        <div className="card p-5 mb-6">
+                            <div className="section-title"><span>🚀</span> Improvement Progress</div>
+                            {improvement ? (
+                                <div className="grid grid-cols-5 gap-4">
+                                    <ImprovementCard label="Automated" value={improvement.automated} positive={true} />
+                                    <ImprovementCard label="Mismatches" value={improvement.mismatches} positive={false} />
+                                    <ImprovementCard label="Requires Update" value={improvement.requiresUpdate} positive={false} />
+                                    <ImprovementCard label="Open Bugs" value={improvement.openBugs} positive={false} />
+                                    <ImprovementCard label="Run Sequential" value={improvement.runSequential} positive={false} />
+                                </div>
+                            ) : (
+                                <div className="text-sm text-slate-400 text-center py-6">
+                                    Run generation at least twice to see improvement progress. Data is saved in Supabase for comparison.
+                                </div>
+                            )}
+                            {history.length > 1 && (
+                                <div className="mt-4 text-xs text-slate-400">
+                                    Comparing: {new Date(history[history.length - 2].timestamp).toLocaleDateString()} → {new Date(history[history.length - 1].timestamp).toLocaleDateString()}
+                                    {' '}({history.length} snapshots total)
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Automation Timeline - Tests Automated Over Time */}
+                        <div className="card p-5 mb-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="section-title" style={{ marginBottom: 0 }}><span>📅</span> Tests Automated by Timeline</div>
+                                <div className="flex items-center gap-2">
+                                    <button className="btn btn-outline text-xs" style={{ padding: '4px 10px' }} onClick={() => exportSectionPDF('Automation Timeline')} disabled={!data}>📄 PDF</button>
+                                    <select
+                                        value={timelineYear}
+                                        onChange={e => setTimelineYear(e.target.value)}
+                                        className="token-input" style={{ width: 'auto', padding: '6px 12px', fontSize: '13px' }}
+                                    >
+                                    <option value="all">All Years</option>
+                                    {(() => {
+                                        const years = new Set();
+                                        (data?.automationTimeline || []).forEach(t => { if (t.month) years.add(t.month.slice(0, 4)); });
+                                        if (years.size === 0) { const y = new Date().getFullYear(); years.add(String(y)); years.add(String(y - 1)); }
+                                        return [...years].sort().reverse().map(y => <option key={y} value={y}>{y}</option>);
+                                    })()}
+                                    </select>
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mb-4">Shows how many tests were first marked as Automated-UI/API each month (from ADO work item revision history).</p>
+                            {(() => {
+                                const filteredTimeline = (data?.automationTimeline || []).filter(t => timelineYear === 'all' || t.month?.startsWith(timelineYear));
+                                return (
+                                    <React.Fragment>
+                                        <AutomationTimelineChart timeline={filteredTimeline} />
+                                        {filteredTimeline.length > 0 && (
+                                            <div className="mt-4">
+                                                <div className="text-sm font-semibold text-slate-700 mb-2">Monthly Details</div>
+                                                <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Month</th>
+                                                                <th>New Automated</th>
+                                                                <th>Cumulative Total</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {filteredTimeline.map((t, i) => (
+                                                                <tr key={i}>
+                                                                    <td className="font-medium">{t.label}</td>
+                                                                    <td><span className="badge badge-blue">{t.newAutomated}</span></td>
+                                                                    <td><span className="badge badge-green">{t.cumulativeTotal}</span></td>
+                                                                    <td>
+                                                                        <a href="#" className="link text-xs" onClick={e => {
+                                                                            e.preventDefault();
+                                                                            setShowModal({ type: 'timeline_ids', data: t.ids || [], title: `Tests Automated in ${t.label}` });
+                                                                        }}>Show IDs ({t.newAutomated})</a>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })()}
+                        </div>
+                        </React.Fragment>)}
+
+                        {activeTab === 'bugs' && (<React.Fragment>
+                        {/* Bugs Found by Automation - Monthly Breakdown */}
+                        <div className="card p-5 mb-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="section-title" style={{ marginBottom: 0 }}><span>🪲</span> Bugs Found by Automation (Monthly)</div>
+                                <div className="flex items-center gap-2">
+                                    <button className="btn btn-outline text-xs" style={{ padding: '4px 10px' }} onClick={() => exportSectionPDF('Bugs by Automation')} disabled={!data}>📄 PDF</button>
+                                    <select
+                                        value={bugsYear}
+                                        onChange={e => setBugsYear(e.target.value)}
+                                        className="token-input" style={{ width: 'auto', padding: '6px 12px', fontSize: '13px' }}
+                                    >
+                                    <option value="all">All Years</option>
+                                    {(() => {
+                                        const years = new Set();
+                                        (data?.bugsByMonth || []).forEach(b => { if (b.month) years.add(b.month.slice(0, 4)); });
+                                        if (years.size === 0) { const y = new Date().getFullYear(); years.add(String(y)); years.add(String(y - 1)); }
+                                        return [...years].sort().reverse().map(y => <option key={y} value={y}>{y}</option>);
+                                    })()}
+                                    </select>
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mb-4">ADO bugs where Issue Source = "Automation" or Testing Type = "Automation" under HighQ Tech project, grouped by creation month.</p>
+                            {(() => {
+                                const filteredBugsByMonth = (data?.bugsByMonth || []).filter(b => bugsYear === 'all' || b.month?.startsWith(bugsYear));
+                                const filteredRpBugs = (data?.rpBugsFromAutomation || []).filter(b => bugsYear === 'all' || b.month?.startsWith(bugsYear));
+                                return (
+                                    <React.Fragment>
+                                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                            <div className="lg:col-span-2">
+                                                <BugsFoundByMonthChart bugsByMonth={filteredBugsByMonth} />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-semibold text-slate-700 mb-3">Monthly Breakdown</div>
+                                                {filteredBugsByMonth.length > 0 ? (
+                                                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                                                        {filteredBugsByMonth.map((m, i) => (
+                                                            <div key={i} className="flex items-center justify-between border border-slate-200 rounded-lg p-3">
+                                                                <div>
+                                                                    <div className="text-sm font-medium text-slate-700">
+                                                                        {new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                                                    </div>
+                                                                    <div className="text-xs text-slate-400">{m.bugs.filter(b => b.state === 'Active').length} active</div>
+                                                                </div>
+                                                                <div className="text-2xl font-bold text-red-500">{m.count}</div>
+                                                            </div>
+                                                        ))}
+                                                        <div className="border-t border-slate-200 pt-2 mt-2 flex items-center justify-between">
+                                                            <span className="text-sm font-semibold text-slate-700">Total Bugs Found</span>
+                                                            <span className="text-xl font-bold text-red-600">
+                                                                {filteredBugsByMonth.reduce((sum, m) => sum + m.count, 0)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-slate-400 text-center py-4">No data for selected year</div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Detailed bugs table */}
+                                        {filteredRpBugs.length > 0 && (
+                                            <div className="mt-6">
+                                                <div className="text-sm font-semibold text-slate-700 mb-2">Bugs Found by Automation ({bugsYear === 'all' ? 'All' : bugsYear})</div>
+                                                <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                                    <table>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>ID</th>
+                                                                <th>Title</th>
+                                                                <th>State</th>
+                                                                <th>Severity</th>
+                                                                <th>Created</th>
+                                                                <th>Source</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {filteredRpBugs.slice(0, 100).map((bug, i) => (
+                                                                <tr key={i}>
+                                                                    <td>
+                                                                        <a href={`https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${bug.id}`}
+                                                                           target="_blank" className="link text-xs">#{bug.id}</a>
+                                                                    </td>
+                                                                    <td className="text-xs max-w-[250px] truncate">{bug.title}</td>
+                                                                    <td><span className={`badge ${bug.state === 'Closed' ? 'badge-green' : bug.state === 'Active' ? 'badge-red' : 'badge-amber'}`}>{bug.state}</span></td>
+                                                                    <td className="text-xs">{bug.severity}</td>
+                                                                    <td className="text-xs whitespace-nowrap">{bug.createdDate ? new Date(bug.createdDate).toLocaleDateString() : '—'}</td>
+                                                                    <td className="text-xs">{bug.issueSource || bug.testingType || '—'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Open Bugs by Function - from GitHub @open_bug tags */}
+                        <div className="card p-5 mb-6">
+                            <div className="flex items-center justify-between">
+                                <div className="section-title" style={{ marginBottom: 0 }}><span>🐛</span> Function Level Detail with Open Bugs</div>
+                                <div className="flex gap-2">
+                                    <button className="btn btn-success text-xs" style={{ padding: '4px 10px' }} disabled={!data || !data.openBugsByFunction || Object.keys(data.openBugsByFunction).length === 0} onClick={() => {
+                                        let csv = 'Function,Bug Count,File Name,Folder,Path\n';
+                                        Object.entries(data.openBugsByFunction).forEach(([func, files]) => {
+                                            files.forEach(f => {
+                                                csv += `"${(func || '').replace(/"/g, '""')}",${files.length},"${(f.fileName || '').replace(/"/g, '""')}","${(f.folder || '').replace(/"/g, '""')}","${(f.folder || '')}/${(f.fileName || '')}"\n`;
+                                            });
+                                        });
+                                        const blob = new Blob([csv], { type: 'text/csv' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = `Function_Level_Detail_Open_Bugs_${new Date().toISOString().slice(0, 10)}.csv`;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                    }}>⬇ Download CSV</button>
+                                    <button className="btn btn-outline text-xs" style={{ padding: '4px 10px' }} onClick={() => exportSectionPDF('Open Bugs by Function')} disabled={!data}>📄 PDF</button>
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mb-3">Source: GitHub spec files with <code>@open_bug</code> tag. Run "GitHub (Tags)" section to refresh.</p>
+                            {data && data.openBugsByFunction && Object.keys(data.openBugsByFunction).length > 0 ? (
+                                <div>
+                                    <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Function</th>
+                                                    <th>Count</th>
+                                                    <th>File</th>
+                                                    <th>Path</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {Object.entries(data.openBugsByFunction).flatMap(([func, files]) =>
+                                                    files.map((f, i) => (
+                                                        <tr key={`${func}-${i}`}>
+                                                            {i === 0 ? <td rowSpan={files.length} className="font-medium text-sm align-top">{func} <span className="badge badge-red">{files.length}</span></td> : null}
+                                                            <td className="text-xs">{f.fileName}</td>
+                                                            <td className="text-xs text-slate-500 max-w-[300px] truncate">
+                                                                <a href={`https://github.com/tr/highq_collaborate_pw/blob/master/${f.folder}/${f.fileName}`} target="_blank" className="link">{f.folder}/{f.fileName}</a>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-sm text-slate-400 text-center py-6">
+                                    {data ? 'No open bug data available. Run "GitHub (Tags)" section.' : 'Click Generate to populate data'}
+                                </div>
+                            )}
+                        </div>
+                        </React.Fragment>)}
+
+                        {/* Info banner when no data */}
+                        {!data && !generating && (
+                            <div className="card p-6 text-center border-dashed border-2 border-slate-300 bg-slate-50/50">
+                                <div className="text-2xl mb-2">📡</div>
+                                <h2 className="text-xl font-bold text-slate-700 mb-2">QA Automation Monitor</h2>
+                                <p className="text-slate-500 mb-6">Enter your tokens above and click Generate to fetch data from ADO, GitHub, and Report Portal.</p>
+                                <p className="text-xs text-slate-400">Connect to Supabase via ⚙️ to persist data across sessions.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Config Modal */}
+                    {showConfig && (
+                        <div className="modal-overlay" onClick={() => setShowConfig(false)}>
+                            <div className="modal" onClick={e => e.stopPropagation()}>
+                                <h2 className="text-lg font-bold mb-4">Configuration</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500 block mb-1">Supabase URL</label>
+                                        <input className="token-input" value={sbUrl} onChange={e => setSbUrl(e.target.value)} placeholder="https://xxx.supabase.co" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-500 block mb-1">Supabase Anon Key</label>
+                                        <input className="token-input" type="password" value={sbKey} onChange={e => setSbKey(e.target.value)} placeholder="eyJ..." />
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button className="btn btn-primary" onClick={connectSupabase}>Connect Supabase</button>
+                                        {sbConnected && <span className="text-xs text-green-600 self-center">● Connected</span>}
+                                    </div>
+                                    <hr className="my-4" />
+                                    <div className="text-xs text-slate-500">
+                                        <p className="font-semibold mb-1">Supabase Table Setup:</p>
+                                        <pre className="bg-slate-50 p-3 rounded-lg text-xs overflow-x-auto">
+{`CREATE TABLE qa_monitor_data (
+  key TEXT PRIMARY KEY,
+  data JSONB,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);`}
+                                        </pre>
+                                    </div>
+                                    <hr className="my-4" />
+                                    <button className="btn btn-danger" onClick={() => { localStorage.clear(); location.reload(); }}>
+                                        Clear Local Storage
+                                    </button>
+                                </div>
+                                <button className="btn btn-outline mt-4" onClick={() => setShowConfig(false)}>Close</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Detail Modal */}
+                    {showModal && (
+                        <div className="modal-overlay" onClick={() => setShowModal(null)}>
+                            <div className="modal" style={{ minWidth: '700px' }} onClick={e => e.stopPropagation()}>
+                                <DetailModal type={showModal.type} data={showModal.data} customTitle={showModal.title} onClose={() => setShowModal(null)} />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ─── MetricCard ───────────────────────────────────────────────────────
+        function MetricCard({ value, label, color, bgColor, onClick, linkText }) {
+            return (
+                <div className="metric-card" style={{ borderTop: `3px solid ${color}` }} onClick={onClick}>
+                    <div className="metric-value" style={{ color }}>{value}</div>
+                    <div className="metric-label">{label}</div>
+                    {linkText && (
+                        <a href="#" className="link text-xs mt-2 inline-block" onClick={e => { e.preventDefault(); onClick?.(); }}>
+                            {linkText}
+                        </a>
+                    )}
+                </div>
+            );
+        }
+
+        // ─── ImprovementCard ──────────────────────────────────────────────────
+        function ImprovementCard({ label, value, positive }) {
+            // For "positive" metrics (like Automated), increase is good
+            // For "negative" metrics (like Mismatches), decrease is good
+            const isGood = positive ? value > 0 : value < 0;
+            const isBad = positive ? value < 0 : value > 0;
+            const arrow = value > 0 ? '↑' : value < 0 ? '↓' : '→';
+            const color = isGood ? 'text-green-600' : isBad ? 'text-red-600' : 'text-slate-400';
+
+            return (
+                <div className="border border-slate-200 rounded-lg p-4 text-center">
+                    <div className={`text-xl font-bold ${color}`}>
+                        {arrow} {Math.abs(value)}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">{label}</div>
+                </div>
+            );
+        }
+
+        // ─── StabilityChart ───────────────────────────────────────────────────
+        function StabilityChart({ monthlyData, type }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+
+            useEffect(() => {
+                if (!canvasRef.current || !monthlyData || !monthlyData.length) return;
+
+                if (chartRef.current) chartRef.current.destroy();
+
+                const ctx = canvasRef.current.getContext('2d');
+                const labels = monthlyData.map(m => m.label);
+                const passRates = monthlyData.map(m => m.passRate);
+
+                chartRef.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: `Pass Rate % (${type})`,
+                            data: passRates,
+                            borderColor: type === 'legacy' ? '#f59e0b' : '#6366f1',
+                            backgroundColor: type === 'legacy' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: (ctx) => {
+                                        const idx = ctx[0]?.dataIndex;
+                                        if (idx !== undefined && monthlyData[idx]) {
+                                            const m = monthlyData[idx];
+                                            return [
+                                                `Total Tests: ${m.total}`,
+                                                `Passed: ${m.passed}`,
+                                                `Failed: ${m.failed}`,
+                                                `Skipped: ${m.skipped}`,
+                                                `Launches: ${m.launches}`
+                                            ];
+                                        }
+                                        return [];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                return () => { if (chartRef.current) chartRef.current.destroy(); };
+            }, [monthlyData, type]);
+
+            if (!monthlyData || !monthlyData.length) {
+                return <div className="text-sm text-slate-400 text-center py-8">No {type} regression data available. Run Report Portal section.</div>;
+            }
+
+            return (
+                <div>
+                    <div className="chart-container">
+                        <canvas ref={canvasRef}></canvas>
+                    </div>
+                    <div className="mt-3 table-container" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Total Tests</th>
+                                    <th>Passed</th>
+                                    <th>Failed</th>
+                                    <th>Pass Rate</th>
+                                    <th>Launches</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {monthlyData.map((m, i) => (
+                                    <tr key={i}>
+                                        <td className="font-medium">{m.label}</td>
+                                        <td>{m.total}</td>
+                                        <td><span className="badge badge-green">{m.passed}</span></td>
+                                        <td><span className="badge badge-red">{m.failed}</span></td>
+                                        <td>
+                                            <div className="flex items-center gap-2">
+                                                <div className="progress-bar flex-1">
+                                                    <div className="progress-fill" style={{ width: `${m.passRate}%`, background: m.passRate > 80 ? 'var(--green)' : m.passRate > 60 ? 'var(--amber)' : 'var(--red)' }}></div>
+                                                </div>
+                                                <span className="text-xs font-semibold">{m.passRate}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="text-xs text-slate-500">{m.launches}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // ─── FunctionStabilityTable ──────────────────────────────────────────
+        function FunctionStabilityTable({ data, type }) {
+            if (!data || data.length === 0) {
+                return <div className="text-sm text-slate-400 text-center py-4">No function-level data available.</div>;
+            }
+            const color = type === 'legacy' ? '#f59e0b' : '#6366f1';
+            return (
+                <div className="table-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Function</th>
+                                <th>Launches</th>
+                                <th>Total Tests</th>
+                                <th>Passed</th>
+                                <th>Failed</th>
+                                <th>Pass Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((row, i) => (
+                                <tr key={i}>
+                                    <td className="font-medium text-sm capitalize">{row.func}</td>
+                                    <td className="text-xs">{row.launches}</td>
+                                    <td className="text-xs">{row.total}</td>
+                                    <td><span className="badge badge-green">{row.passed}</span></td>
+                                    <td><span className="badge badge-red">{row.failed}</span></td>
+                                    <td>
+                                        <div className="flex items-center gap-2">
+                                            <div className="progress-bar flex-1">
+                                                <div className="progress-fill" style={{ width: `${row.passRate}%`, background: row.passRate > 80 ? 'var(--green)' : row.passRate > 60 ? 'var(--amber)' : 'var(--red)' }}></div>
+                                            </div>
+                                            <span className="text-xs font-semibold">{row.passRate}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+
+        // ─── AutomationTimelineChart ─────────────────────────────────────────
+        function AutomationTimelineChart({ timeline }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+
+            useEffect(() => {
+                if (!canvasRef.current || !timeline || !timeline.length) return;
+                if (chartRef.current) chartRef.current.destroy();
+
+                const ctx = canvasRef.current.getContext('2d');
+                const labels = timeline.map(t => t.label);
+                const newAutomated = timeline.map(t => t.newAutomated);
+                const cumulative = timeline.map(t => t.cumulativeTotal);
+
+                chartRef.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'New Tests Automated',
+                                data: newAutomated,
+                                backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                                borderColor: '#6366f1',
+                                borderWidth: 1,
+                                borderRadius: 4,
+                                order: 2
+                            },
+                            {
+                                label: 'Cumulative Total',
+                                data: cumulative,
+                                type: 'line',
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                fill: true,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                pointHoverRadius: 7,
+                                yAxisID: 'y1',
+                                order: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'New Tests / Month' }
+                            },
+                            y1: {
+                                position: 'right',
+                                beginAtZero: true,
+                                title: { display: true, text: 'Cumulative Total' },
+                                grid: { drawOnChartArea: false }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: (ctx) => {
+                                        const idx = ctx[0]?.dataIndex;
+                                        if (idx !== undefined && timeline[idx]) {
+                                            return [`Month: ${timeline[idx].month}`];
+                                        }
+                                        return [];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                return () => { if (chartRef.current) chartRef.current.destroy(); };
+            }, [timeline]);
+
+            if (!timeline || !timeline.length) {
+                return <div className="text-sm text-slate-400 text-center py-8">No automation timeline data available. Run generation multiple times to build history.</div>;
+            }
+
+            return (
+                <div className="chart-container">
+                    <canvas ref={canvasRef}></canvas>
+                </div>
+            );
+        }
+
+        // ─── BugsFoundByMonthChart ────────────────────────────────────────────
+        function BugsFoundByMonthChart({ bugsByMonth }) {
+            const canvasRef = useRef(null);
+            const chartRef = useRef(null);
+
+            useEffect(() => {
+                if (!canvasRef.current || !bugsByMonth || !bugsByMonth.length) return;
+                if (chartRef.current) chartRef.current.destroy();
+
+                const ctx = canvasRef.current.getContext('2d');
+                const labels = bugsByMonth.map(b => {
+                    const d = new Date(b.month + '-01');
+                    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                });
+                const counts = bugsByMonth.map(b => b.count);
+
+                chartRef.current = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Bugs Found by Automation',
+                            data: counts,
+                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                            borderColor: '#ef4444',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 },
+                                title: { display: true, text: 'Bug Count' }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    afterBody: (ctx) => {
+                                        const idx = ctx[0]?.dataIndex;
+                                        if (idx !== undefined && bugsByMonth[idx]) {
+                                            const bugs = bugsByMonth[idx].bugs.slice(0, 5);
+                                            const lines = bugs.map(b => `• ${b.itemName?.slice(0, 40) || 'Test'} ${b.bugId ? '(#' + b.bugId + ')' : ''}`);
+                                            if (bugsByMonth[idx].bugs.length > 5) lines.push(`  +${bugsByMonth[idx].bugs.length - 5} more`);
+                                            return lines;
+                                        }
+                                        return [];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                return () => { if (chartRef.current) chartRef.current.destroy(); };
+            }, [bugsByMonth]);
+
+            if (!bugsByMonth || !bugsByMonth.length) {
+                return <div className="text-sm text-slate-400 text-center py-8">No bug data from automation available. Ensure RP token is configured and launches have linked defects.</div>;
+            }
+
+            return (
+                <div className="chart-container">
+                    <canvas ref={canvasRef}></canvas>
+                </div>
+            );
+        }
+
+        // ─── DetailModal ──────────────────────────────────────────────────────
+        function DetailModal({ type, data, onClose, customTitle }) {
+            const titles = {
+                mismatches: 'Mismatches',
+                requires_update: 'Tests with requires_update',
+                open_bugs: 'Tests with open_bug',
+                runSequential: 'Tests with runSequential',
+                bugs_by_automation: 'Bugs Found by Automation',
+                timeline_ids: customTitle || 'Automated Test Cases',
+                function_case_list: customTitle || 'Function Test Cases'
+            };
+
+            function downloadCSV() {
+                let csv = '';
+                if (type === 'timeline_ids') {
+                    csv = 'Work Item ID,Automated Date,Link\n';
+                    data.forEach(item => {
+                        csv += `${item.id},${item.date ? new Date(item.date).toLocaleDateString() : ''},https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${item.id}\n`;
+                    });
+                } else if (type === 'mismatches') {
+                    csv = 'ID,Title,Type,Detail,File\n';
+                    data.forEach(item => {
+                        csv += `${item.id},"${(item.title || '').replace(/"/g, '""')}",${item.type},"${(item.detail || '').replace(/"/g, '""')}","${item.file || ''}"\n`;
+                    });
+                } else if (type === 'bugs_by_automation') {
+                    csv = 'Month,Test Name,Launch,Bug ID,Issue Type,Comment\n';
+                    data.forEach(bug => {
+                        csv += `${bug.month},"${(bug.itemName || '').replace(/"/g, '""')}","${(bug.launchName || '').replace(/"/g, '""')}",${bug.bugId || ''},${bug.issueType},"${(bug.comment || '').replace(/"/g, '""')}"\n`;
+                    });
+                } else if (type === 'function_case_list') {
+                    csv = 'Work Item ID,Title,State,Suite Type,Automation Status,Function,Sub Function,Link\n';
+                    data.forEach(item => {
+                        csv += `${item.id || ''},"${(item.title || '').replace(/"/g, '""')}","${(item.state || '').replace(/"/g, '""')}","${(item.suiteType || '').replace(/"/g, '""')}","${(item.autoStatus || '').replace(/"/g, '""')}","${(item.function || '').replace(/"/g, '""')}","${(item.subFunction || '').replace(/"/g, '""')}",https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${item.id}\n`;
+                    });
+                } else {
+                    csv = 'File,Folder,IDs,Author,Tags\n';
+                    data.forEach(item => {
+                        csv += `"${item.fileName || ''}","${item.folder || ''}","${(item.ids || []).join('; ')}","${item.author || ''}","${(item.tags || []).join('; ')}"\n`;
+                    });
+                }
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${(titles[type] || type).replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            return (
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-bold">{titles[type] || customTitle || type} ({data.length})</h3>
+                        <div className="flex gap-2">
+                            <button className="btn btn-success text-xs" onClick={downloadCSV}>⬇ Download CSV</button>
+                            <button className="btn btn-outline text-xs" onClick={onClose}>✕ Close</button>
+                        </div>
+                    </div>
+                    <div className="table-container" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                        {type === 'timeline_ids' ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Work Item ID</th>
+                                        <th>Automated Date</th>
+                                        <th>Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((item, i) => (
+                                        <tr key={i}>
+                                            <td className="text-xs text-slate-400">{i + 1}</td>
+                                            <td className="font-medium">{item.id}</td>
+                                            <td className="text-xs">{item.date ? new Date(item.date).toLocaleDateString() : '—'}</td>
+                                            <td>
+                                                <a href={`https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${item.id}`}
+                                                   target="_blank" className="link text-xs">Open in ADO ↗</a>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : type === 'mismatches' ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Title</th>
+                                        <th>Type</th>
+                                        <th>Detail</th>
+                                        <th>File</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((item, i) => (
+                                        <tr key={i}>
+                                            <td>
+                                                <a href={`https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${item.id}`}
+                                                   target="_blank" className="link">{item.id}</a>
+                                            </td>
+                                            <td className="max-w-xs truncate">{item.title}</td>
+                                            <td><span className={`badge ${item.type.includes('CLOSED') ? 'badge-red' : item.type.includes('AUTOMATED') || item.type.includes('REQUIRES_AUTOMATION') ? 'badge-amber' : item.type.includes('TBD') || item.type.includes('MANUAL') ? 'badge-purple' : 'badge-blue'}`}>{item.type.replace(/_/g, ' ')}</span></td>
+                                            <td className="text-xs text-slate-500 max-w-xs truncate">{item.detail}</td>
+                                            <td className="text-xs truncate max-w-[120px]">{item.file}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : type === 'bugs_by_automation' ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>Test Name</th>
+                                        <th>Launch</th>
+                                        <th>Bug ID</th>
+                                        <th>Issue Type</th>
+                                        <th>Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((bug, i) => (
+                                        <tr key={i}>
+                                            <td className="text-xs whitespace-nowrap">{bug.month}</td>
+                                            <td className="text-xs max-w-[200px] truncate">{bug.itemName}</td>
+                                            <td className="text-xs max-w-[150px] truncate">{bug.launchName}</td>
+                                            <td>
+                                                {bug.bugId ? (
+                                                    <a href={`https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${bug.bugId}`}
+                                                       target="_blank" className="link text-xs">#{bug.bugId}</a>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400">—</span>
+                                                )}
+                                            </td>
+                                            <td><span className="badge badge-red">{bug.issueType}</span></td>
+                                            <td className="text-xs max-w-[200px] truncate text-slate-500">{bug.comment}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : type === 'function_case_list' ? (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Work Item ID</th>
+                                        <th>Title</th>
+                                        <th>State</th>
+                                        <th>Suite Type</th>
+                                        <th>Automation Status</th>
+                                        <th>Function</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((item, i) => (
+                                        <tr key={i}>
+                                            <td className="text-xs text-slate-400">{i + 1}</td>
+                                            <td>
+                                                <a href={`https://dev.azure.com/tr-legal/HighQ%20Tech/_workitems/edit/${item.id}`}
+                                                   target="_blank" className="link text-xs">#{item.id}</a>
+                                            </td>
+                                            <td className="text-xs max-w-[260px] truncate" title={item.title || ''}>{item.title || '—'}</td>
+                                            <td className="text-xs">{item.state || '—'}</td>
+                                            <td className="text-xs">{item.suiteType || '—'}</td>
+                                            <td className="text-xs">{item.autoStatus || '—'}</td>
+                                            <td className="text-xs">{item.function || '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>File</th>
+                                        <th>Folder</th>
+                                        <th>IDs</th>
+                                        <th>Author</th>
+                                        <th>Tags</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((item, i) => (
+                                        <tr key={i}>
+                                            <td>
+                                                <a href={`https://github.com/${GH_REPO}/blob/${GH_BRANCH}/${item.file}`}
+                                                   target="_blank" className="link text-xs">{item.fileName}</a>
+                                            </td>
+                                            <td className="text-xs text-slate-500 max-w-[150px] truncate">{item.folder}</td>
+                                            <td className="text-xs">{(item.ids || []).slice(0, 5).join(', ')}{item.ids?.length > 5 ? '...' : ''}</td>
+                                            <td className="text-xs">{item.author}</td>
+                                            <td className="text-xs">{(item.tags || []).join(', ')}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ─── Mount ────────────────────────────────────────────────────────────
+        ReactDOM.createRoot(document.getElementById('root')).render(<QAMonitorApp />);
+    </script>
+    <script>
+        (function bootstrapQAMonitor() {
+            try {
+                const sourceEl = document.getElementById('qa-app-source');
+                if (!sourceEl || !window.Babel) return;
+                const transformed = Babel.transform(sourceEl.textContent || '', {
+                    presets: ['env'],
+                    plugins: [[Babel.availablePlugins['transform-react-jsx'], { runtime: 'classic' }]]
+                }).code;
+                const runtimeScript = document.createElement('script');
+                runtimeScript.text = transformed;
+                document.body.appendChild(runtimeScript);
+            } catch (err) {
+                console.error('QA Monitor bootstrap failed:', err);
+                const fallback = document.createElement('div');
+                fallback.style.cssText = 'padding:16px;color:#b91c1c;font-family:Segoe UI,sans-serif;font-size:14px;';
+                fallback.textContent = 'Failed to load QA Automation Monitor. Check browser console for details.';
+                document.body.appendChild(fallback);
+            }
+        })();
+    </script>
+</body>
+
+</html>
